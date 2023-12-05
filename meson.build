@@ -18,7 +18,7 @@ logfile = meson.global_source_root() / 'log.txt'
 
 iso_dir = '/tmp/tmp_iso_dir'
 iso_files = [
-    meson.global_source_root() / 'misc/limine.cfg'
+    meson.global_source_root() / 'meta/limine.cfg'
 ]
 
 qemu_args = [
@@ -64,7 +64,8 @@ if arch == 'x86_64'
 endif
 
 incs = [
-  include_directories('kernel/include')
+  include_directories('kernel/include'),
+  include_directories('kernel/include/libc')
 ]
 
 add_global_arguments(
@@ -93,7 +94,6 @@ add_global_arguments(
   '-fno-rtti',
   '-fno-exceptions',
   '-fsized-deallocation',
-  '-stdlib=libc++',
   language: 'cpp'
 )
 
@@ -134,7 +134,7 @@ custom_target('run_bios',
     input : iso,
     output : 'run_bios',
     command : [qemu, qemu_args, '-cdrom', '@INPUT@'],
-    build_by_default : true,
+    build_by_default : false,
     console : true,
     install : false,
     depends : iso
@@ -147,7 +147,7 @@ custom_target('run_uefi',
     input : iso,
     output : 'run_uefi',
     command : [qemu, qemu_args, '-cdrom', '@INPUT@', '-bios', ovmf],
-    build_by_default : not supports_bios,
+    build_by_default : true,
     console : true,
     install : false,
     depends : iso

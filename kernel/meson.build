@@ -1,7 +1,7 @@
 sources = files()
 
 ld_args = [
-  '-Wl,-T,' + meson.current_source_dir() / 'arch' / arch / 'linker.ld',
+  '-Wl,-T,' + meson.current_source_dir() / 'src/arch' / arch / 'linker.ld',
   '-Wl,-z,max-page-size=0x1000',
   '-nostdlib',
   '-static'
