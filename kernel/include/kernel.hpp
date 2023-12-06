@@ -1,5 +1,4 @@
-#ifndef __KERNEL_HPP__
-#define __KERNEL_HPP__
-
+#ifndef KERNEL_INCLUDE_KERNEL_HPP_
+#define KERNEL_INCLUDE_KERNEL_HPP_
 
 #endif

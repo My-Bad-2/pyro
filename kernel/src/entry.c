@@ -1,4 +1,5 @@
 #include <limine.h>
+#include <system/compiler.h>
 
 extern void kmain();
 
@@ -7,7 +8,7 @@ void _start() {
 
     while (true) {
 #if defined(__x86_64__)
-        __asm__ volatile("hlt");
+        asm volatile("hlt");
 #else
 #error "Unknown Architecture"
 #endif

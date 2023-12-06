@@ -4,4 +4,5 @@ sources += files(
 )
 
 subdir('libc')
-# subdir('arch' / arch)
+subdir('misc')
+subdir('arch' / arch)

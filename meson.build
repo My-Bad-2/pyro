@@ -56,17 +56,14 @@ qemu = 'qemu-system-' + arch
 
 qemu_dbg_args = [
   '-no-reboot', '-no-shutdown',
-  '-d', 'int', '-D', logfile,
+  '-d', 'int', '-D', logfile
 ]
 
 if arch == 'x86_64'
-    qemu_dbg_args += ['-M', 'smm=off']
+  qemu_dbg_args += ['-M', 'smm=off']
 endif
 
-incs = [
-  include_directories('kernel/include'),
-  include_directories('kernel/include/libc')
-]
+incs = []
 
 add_global_arguments(
   '-ffreestanding',

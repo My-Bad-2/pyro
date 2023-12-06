@@ -1,3 +1,7 @@
+sources += files(
+    'dev/serials.cpp'
+)
+
 args += [
     '-march=x86-64',
     '-msoft-float',

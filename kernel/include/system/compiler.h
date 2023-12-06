@@ -44,7 +44,7 @@
 
 // restrict keyword
 #ifdef __cplusplus
-#define __restrict
+#define __restrict __restrict__
 #else
 #define __restrict restrict
 #endif
@@ -395,6 +395,11 @@
 #define __CONSTINIT __constinit
 #else
 #define __CONSTINIT
+#endif
+
+// Fix for inline assembly function in C
+#ifndef __cplusplus
+#define asm __asm__
 #endif
 
 #endif  // !defined(__ASSEMBLER__)
