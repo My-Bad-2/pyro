@@ -34,5 +34,5 @@
 # Directories
 .cache/
 build/
-./subprojects/limine/
-./subprojects/ovmf_projects/
+subprojects/limine/
+subprojects/ovmf_binaries/
