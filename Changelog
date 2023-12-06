@@ -10,3 +10,7 @@ My-Bad-2
 December 6, 2023 10:50 AM (UTC)
 - Use `using namespace serials` instead of spamming `serials::` in `dev/serials.cpp:serial_device::initialize`
 - Add `x86.cpp` into `meson.build` sources
+
+My-Bad-2
+December 6, 2023 11:25 AM (UTC)
+- Use `Doxygen-awesome-css` as html documentation template

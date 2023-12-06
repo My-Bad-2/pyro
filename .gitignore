@@ -36,3 +36,4 @@
 build/
 subprojects/limine/
 subprojects/ovmf_binaries/
+docs/generated/
