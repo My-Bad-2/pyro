@@ -117,3 +117,12 @@ bool serial_device::initialize(uint16_t port) {
     return true;
 }
 }  // namespace dev
+
+/**
+ * @brief C wrapper for serial ports `putc` function.
+ *
+ * @param c character to be written
+ */
+extern "C" void putc(char c) {
+    dev::gserial.putc(c);
+}

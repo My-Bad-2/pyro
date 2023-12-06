@@ -12,6 +12,7 @@ args = []
 incs += [
   include_directories('include'),
   include_directories('include/libc'),
+  include_directories('include/libc++'),
   include_directories('include/arch' / arch)
 ]
 

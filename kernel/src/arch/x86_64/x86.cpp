@@ -10,6 +10,4 @@ void arch_initialize() {
     if (!dev::gserial.initialize(SERIAL_COM1)) {
         dev::gserial.write("Serial chip is faulty!\n");
     }
-
-    dev::gserial.write("Hello, World!\n");
 }

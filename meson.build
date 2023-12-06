@@ -97,7 +97,8 @@ add_global_arguments(
 limine = subproject('limine', default_options : 'arch=' + arch)
 
 deps = [
-  dependency('limine')
+  dependency('limine'),
+  dependency('printf')
 ]
 
 deps_inc = []
