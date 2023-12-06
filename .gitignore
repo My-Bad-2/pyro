@@ -37,4 +37,4 @@ build/
 subprojects/limine/
 subprojects/ovmf_binaries/
 subprojects/printf/
-docs/generated/
+docs/generated/html/
