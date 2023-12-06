@@ -1,5 +1,6 @@
 sources += files(
-    'dev/serials.cpp'
+    'dev/serials.cpp',
+    'x86.cpp'
 )
 
 args += [

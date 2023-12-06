@@ -76,47 +76,43 @@ void serial_device::write(const char* string) {
 bool serial_device::initialize(uint16_t port) {
     serial_port = port;
 
+    using namespace serials;
+
     // Disable all interrupts
-    write_reg(serials::InterruptIdentifactor, 0x00);
+    write_reg(InterruptIdentifactor, 0x00);
 
     // Enable DLAB (set baud rate divisor)
-    write_reg(serials::LineControl, serials::DlabStatus);
+    write_reg(LineControl, DlabStatus);
 
     // Set divisor to 3 (lo byte) 38400 baud
-    write_reg(serials::BaudRateLow, serials::Baud38400);
+    write_reg(BaudRateLow, Baud38400);
 
     // Set divisor to 3 (hi byte) baud
-    write_reg(serials::BaudRateHigh, 0x00);
+    write_reg(BaudRateHigh, 0x00);
 
     // 8 bits, no parity, one stop bit
-    write_reg(serials::LineControl, serials::DataSize8);
+    write_reg(LineControl, DataSize8);
 
     // Enable FIFO, Clear themm with 14-byte threshold
-    write_reg(serials::FifoController,
-              serials::EnableFIFO | serials::ClearReceiveFIFO |
-                  serials::ClearTransmitFIFO | serials::TriggerLevel4);
+    write_reg(FifoController, EnableFIFO | ClearReceiveFIFO |
+                                  ClearTransmitFIFO | TriggerLevel4);
 
     // IRQs enabled, RTS/DSR set
-    write_reg(serials::ModemControl,
-              serials::ModemRts | serials::ModemDtr | serials::ModemOut2);
+    write_reg(ModemControl, ModemRts | ModemDtr | ModemOut2);
 
     // set in loopback mode, test the serial chip
-    write_reg(serials::ModemControl,
-              serials::ModemLoopback | serials::ModemRts | serials::ModemOut1 |
-                  serials::ModemOut2);
+    write_reg(ModemControl, ModemLoopback | ModemRts | ModemOut1 | ModemOut2);
 
     // Test the serial chip (send byte 0xAE and check if serial returns the same byte)
-    write_reg(serials::Data, 0xAE);
+    write_reg(Data, 0xAE);
 
-    if (read_reg(serials::Data) != 0xAE) {
+    if (read_reg(Data) != 0xAE) {
         return false;
     }
 
     // If serial is not fault set it in normal operation mode
     // (not-loopback with IRQs enabled and OUT#1 and OUT#2 bits enabled)
-    write_reg(serials::ModemControl, serials::ModemDtr | serials::ModemRts |
-                                         serials::ModemOut1 |
-                                         serials::ModemOut2);
+    write_reg(ModemControl, ModemDtr | ModemRts | ModemOut1 | ModemOut2);
 
     return true;
 }
