@@ -47,7 +47,7 @@ To get a local copy up and running follow these simple example steps.
 
 ### Prerequisites
 
-* LLVM
+* LLVM (or build GCC cross-compiler for your target)
 * Xorriso
 * QEMU
 * Meson
@@ -65,11 +65,11 @@ git clone https://github.com/My-Bad-2/pyro.git
 ```sh
 meson setup build --cross-file meta/x86_64-clang.cross-file
 ```
-Note: Change the x86_64-clang.cross-file as necessary for your build
+Note: Change the `x86_64-clang.cross-file` as necessary for your build
 
 3. Build and run
 ```sh
-cd build && meson compiler
+cd build && meson compile
 ```
 
 ## Roadmap

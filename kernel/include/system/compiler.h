@@ -8,7 +8,7 @@
 #define SYSTEM_COMPILER_H_
 
 // Ensure we're using a known compiler
-#if !defined(__GNUC__) || !defined(__clang__)
+#if !defined(__GNUC__) && !defined(__clang__)
 #error "Unknown compiler!"
 #endif
 
