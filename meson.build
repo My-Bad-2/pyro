@@ -98,7 +98,8 @@ limine = subproject('limine', default_options : 'arch=' + arch)
 
 deps = [
   dependency('limine'),
-  dependency('printf')
+  dependency('printf'),
+  dependency('libstdcxx', default_options: 'arch=' + arch)
 ]
 
 deps_inc = []

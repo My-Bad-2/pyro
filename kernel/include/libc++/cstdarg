@@ -1,6 +1,0 @@
-#ifndef KERNEL_INCLUDE_LIBCXX_CSTDARG_
-#define KERNEL_INCLUDE_LIBCXX_CSTDARG_
-
-#include <stdarg.h>
-
-#endif  // KERNEL_INCLUDE_LIBCXX_CSTDARG_

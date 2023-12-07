@@ -12,14 +12,13 @@ args = []
 incs += [
   include_directories('include'),
   include_directories('include/libc'),
-  include_directories('include/libc++'),
   include_directories('include/arch' / arch)
 ]
 
 subdir('src')
 
 kernel_elf = executable(
-  'kernel.elf', 
+  'kernel.elf',
   include_directories: incs,
   sources: sources,
   dependencies: [deps],

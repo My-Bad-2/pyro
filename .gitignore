@@ -37,4 +37,9 @@ build/
 subprojects/limine/
 subprojects/ovmf_binaries/
 subprojects/printf/
+subprojects/libstdcxx/
 docs/generated/html/
+
+# Don't include
+meta/x86_64-clang.cross-file
+meta/x86_64-gcc.cross-file
