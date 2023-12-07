@@ -10,6 +10,12 @@ December 7, 2023 6:55 AM (UTC)
 
 - Use `My-Bad-2/libstdcxx` headers subproject for freestanding C++ headers
 
+My-Bad-2
+December 7, 2023 4:50 PM (UTC)
+
+- Add `logger` for printing debug statements
+- `to_string` to convert integer-types to `char*`
+
 ========= DECEMBER 6, 2023 =========
 
 My-Bad-2

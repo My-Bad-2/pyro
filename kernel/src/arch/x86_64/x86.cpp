@@ -1,5 +1,8 @@
 #include <x86.h>
 #include <dev/serials.hpp>
+#include <system/log.hpp>
+
+logger arch_logger("arch.initialize");
 
 /**
  * @brief Architecture specific initialization for the kernel.
@@ -8,6 +11,6 @@
  */
 void arch_initialize() {
     if (!dev::gserial.initialize(SERIAL_COM1)) {
-        dev::gserial.write("Serial chip is faulty!\n");
+        arch_logger.log(LOG_LEVEL_WARNING, "Serial chip is faulty!\n");
     }
 }
