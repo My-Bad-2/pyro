@@ -34,6 +34,13 @@ SECTIONS
         *(.rodata .rodata.*)
     } :rodata
 
+    .init_array : {
+        PROVIDE_HIDDEN(__init_array_start = .);
+        KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
+        KEEP(*(.init_array .ctors))
+        PROVIDE_HIDDEN(__init_array_end = .);
+    }
+
     /* Move to the next memory page for .data */
     . += CONSTANT(MAXPAGESIZE);
 

@@ -16,6 +16,11 @@ December 7, 2023 4:50 PM (UTC)
 - Add `logger` for printing debug statements
 - `to_string` to convert integer-types to `char*`
 
+My-Bad-2
+December 7, 2023 6:00 PM (UTC)
+
+- Call global constructors
+
 ========= DECEMBER 6, 2023 =========
 
 My-Bad-2

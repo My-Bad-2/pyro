@@ -6,6 +6,7 @@
 
 namespace dev {
 serial_device gserial;
+logger serial_logger("dev.serial");
 
 /**
  * @brief Writes an `unsigned char` value to selected serial port offsetted by `reg`.
@@ -75,7 +76,6 @@ void serial_device::write(const char* string) {
  * @return false The serial port is faulty
  */
 bool serial_device::initialize(uint16_t port) {
-    logger serial_logger("dev.serial");
     serial_port = port;
 
     using namespace serials;

@@ -48,4 +48,13 @@ void __cxa_finalize(void* f) {
     }
 }
 
+extern void (*__init_array_start[])();
+extern void (*__init_array_end[])();
+
+void abi_initialize() {
+    for (auto ctor = __init_array_start; ctor < __init_array_end; ctor++) {
+        (*ctor)();
+    }
+}
+
 __END_CDECLS
