@@ -1,7 +1,9 @@
 sources += files(
-    'dev/serials.cpp',
     'x86.cpp'
 )
+
+subdir('cpu')
+subdir('dev')
 
 args += [
     '-march=x86-64',

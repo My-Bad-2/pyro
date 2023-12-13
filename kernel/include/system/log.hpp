@@ -28,13 +28,8 @@
 typedef unsigned char log_level_type;
 
 class logger {
-   private:
-    const char* task_name;
-
    public:
     logger() = default;
-
-    logger(const char* task_name) : task_name(task_name) {}
 
     void vlog(log_level_type level, const char* message, va_list args);
 

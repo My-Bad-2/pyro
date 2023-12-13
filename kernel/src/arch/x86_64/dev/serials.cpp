@@ -2,11 +2,10 @@
 #include <sys/types.h>
 #include <x86.h>
 #include <dev/serials.hpp>
-#include <system/log.hpp>
+#include <system/log.h>
 
 namespace dev {
 serial_device gserial;
-logger serial_logger("dev.serial");
 
 /**
  * @brief Writes an `unsigned char` value to selected serial port offsetted by `reg`.
@@ -116,7 +115,7 @@ bool serial_device::initialize(uint16_t port) {
     // (not-loopback with IRQs enabled and OUT#1 and OUT#2 bits enabled)
     write_reg(ModemControl, ModemDtr | ModemRts | ModemOut1 | ModemOut2);
 
-    serial_logger.log(LOG_LEVEL_INFO, "Succesfully Initialized.");
+    log_message(LOG_LEVEL_INFO, "Successfully Initialized Serials");
     return true;
 }
 }  // namespace dev

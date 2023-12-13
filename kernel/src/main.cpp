@@ -1,6 +1,6 @@
 #include <arch/arch.h>
 #include <limine.h>
-#include <system/log.hpp>
+#include <system/log.h>
 
 extern "C" void abi_initialize();
 
@@ -12,7 +12,5 @@ extern "C" void kmain() {
     abi_initialize();
     arch_initialize();
 
-    logger kmain_logger("kmain");
-
-    kmain_logger.log(LOG_LEVEL_INFO, "Hello World!");
+    log_message(LOG_LEVEL_INFO, "Hello World!");
 }

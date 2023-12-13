@@ -30,8 +30,8 @@ void logger::log(log_level_type level, const char* message, ...) {
  * @param args arguments
  */
 void logger::vlog(log_level_type level, const char* message, va_list args) {
-    const char* name;
-    const char* color;
+    const char* name = "";
+    const char* color = "";
 
     // Whether to keep the color in rest of the message
     bool keep_color = false;
@@ -82,7 +82,7 @@ void logger::vlog(log_level_type level, const char* message, va_list args) {
         }
     }
 
-    printf("\033[1;%sm[%s - %s\033[0m] ", color, task_name, name);
+    printf("\033[1;%sm[%s\033[0m] ", color, name);
 
     if (keep_color) {
         printf("\033[0;%sm", color);

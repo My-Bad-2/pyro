@@ -5,6 +5,9 @@
 #include <sys/types.h>
 #include <system/compiler.h>
 
+
+__BEGIN_CDECLS
+
 static inline void x86_clts() {
     asm __volatile__("clts");
 }
@@ -22,7 +25,7 @@ static inline void x86_cli() {
 }
 
 static inline void x86_ltr(uint16_t sel) {
-    asm __volatile__("ltr %%ax" ::"a"(sel));
+    asm __volatile__("ltr %0" ::"r"(sel));
 }
 
 static inline void x86_lidt(uintptr_t base) {
@@ -63,6 +66,31 @@ static inline void outpd(uint16_t port, uint32_t data) {
     asm volatile("outl %1, %0" ::"Nd"(port), "a"(data));
 }
 
+static inline void x86_pause() {
+    asm volatile("pause");
+}
+
+#if !defined(__cplusplus)
+__NO_RETURN static inline void halt(bool interrupts) {
+#else
+__NO_RETURN static inline void halt(bool interrupts = true) {
+#endif // !defined(__cplusplus)
+    if (interrupts) {
+        while (true) {
+            x86_hlt();
+        }
+    } else {
+        while (true) {
+            x86_cli();
+            x86_hlt();
+        }
+    }
+}
+
+extern void load_gdt(void* descriptor);
+
 void arch_initialize();
 
-#endif
+__END_CDECLS
+
+#endif // KERNEL_ARCH_X86_64_INCLUDE_ARCH_X86_H_

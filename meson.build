@@ -1,4 +1,4 @@
-project('pyro', ['c', 'cpp'],
+project('pyro', ['c', 'cpp', 'nasm'],
   version : '0.1',
   license: 'MIT',
   meson_version: '>=1.2.0',

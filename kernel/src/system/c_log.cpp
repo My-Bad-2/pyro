@@ -4,7 +4,7 @@
 /**
  * Dedicated logger instance for `C functions`
  */
-logger c_logger("");
+logger c_logger;
 
 /**
  * @brief C-wrapper for logger function. 
