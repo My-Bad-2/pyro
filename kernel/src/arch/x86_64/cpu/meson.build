@@ -3,7 +3,8 @@ sources += files(
     'gdt.asm',
     'idt.cpp',
     'interrupts.cpp',
-    'interrupts.asm'
+    'interrupts.asm',
+    'pic.cpp'
 )
 
 asm_format = 'elf64'

@@ -2,6 +2,8 @@
 #include <system/log.h>
 #include <cpu/gdt.hpp>
 #include <cpu/idt.hpp>
+#include "cpu/interrupts.hpp"
+#include "cpu/pic.hpp"
 
 // External C linkage for interrupt table and IDT loading function
 extern "C" {
@@ -59,7 +61,7 @@ constexpr x86_idt_entry make_idt_entry(uint64_t offset, uint16_t selector,
 /// \brief Initialize the x86 Interrupt Descriptor Table (IDT).
 ///
 /// This function initializes the x86 IDT by setting up the required entries
-/// for interrupt handling.
+/// for interrupt handling and mapping PIC handlers.
 void x86_idt_initialize() {
     // Create a static instance of the x86 IDT structure
     static x86_idt idt;
@@ -81,5 +83,10 @@ void x86_idt_initialize() {
 
     // Log a message indicating successful IDT loading
     log_message(LOG_LEVEL_INFO, "Successfully loaded IDT.");
+
+    // map PIC controllers on PIC1_BASE and PIC2_BASE
+    // triggers IRQ
+    // TODO: Uncomment after implementing IRQ handling
+    // pic_map(PIC1_BASE, PIC2_BASE);
 }
 }  // namespace arch

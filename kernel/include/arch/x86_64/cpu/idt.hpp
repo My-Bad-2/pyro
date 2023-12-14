@@ -87,8 +87,8 @@ constexpr x86_idt_entry make_idt_entry(uint64_t offset, uint16_t selector,
 /// \brief Initialize the x86 Interrupt Descriptor Table (IDT).
 ///
 /// This function initializes the x86 IDT by setting up the required entries
-/// for interrupt handling.
-///
+/// for interrupt handling and mapping PIC handlers.
+// 
 /// \note This function assumes that the interrupt handlers have been defined
 /// and are ready to be associated with corresponding IDT entries.
 ///
@@ -98,7 +98,6 @@ constexpr x86_idt_entry make_idt_entry(uint64_t offset, uint16_t selector,
 /// // Example usage:
 /// x86_idt_initialize();
 /// \endcode
-
 void x86_idt_initialize();
 }  // namespace arch
 

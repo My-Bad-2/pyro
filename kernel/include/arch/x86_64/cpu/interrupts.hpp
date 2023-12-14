@@ -1,6 +1,25 @@
 #ifndef KERNEL_INCLUDE_ARCH_X86_64_CPU_INTERRUPTS_H_
 #define KERNEL_INCLUDE_ARCH_X86_64_CPU_INTERRUPTS_H_
 
+/// \def PIC1_BASE
+/// \brief Base address for the first Programmable Interrupt Controller (PIC) in x86 architecture.
+///
+/// The PIC1_BASE macro defines the base address for the first Programmable Interrupt Controller (PIC)
+/// in x86 architecture. The PIC is responsible for managing hardware interrupts.
+///
+/// \note This value represents the base address for PIC1.
+#define PIC1_BASE X86_INT_PLATFORM_BASE
+
+/// \def PIC2_BASE
+/// \brief Base address for the second Programmable Interrupt Controller (PIC) in x86 architecture.
+///
+/// The PIC2_BASE macro defines the base address for the second Programmable Interrupt Controller (PIC)
+/// in x86 architecture. In a standard configuration, PIC2 is cascaded to PIC1 and is located 8 bytes
+/// higher than PIC1_BASE.
+///
+/// \note This value represents the base address for PIC2, which is derived from PIC1_BASE.
+#define PIC2_BASE (PIC1_BASE + 8)
+
 // clang-format off
 
 /// \enum x86_interrupt_vector
