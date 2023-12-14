@@ -1,3 +1,10 @@
+========= DECEMBER 14, 2023 =========
+My-Bad-2
+December 14, 2023 6:40 AM (UTC)
+
+- Load `IDT` and handle interrupts
+- TODO: Implement NMI handling
+
 ========= DECEMBER 13, 2023 =========
 My-Bad-2
 December 13, 2023 5:20 PM (UTC)

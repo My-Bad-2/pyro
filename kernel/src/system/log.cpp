@@ -1,3 +1,4 @@
+#include <arch/arch.h>
 #include <stdio.h>
 
 #include <system/log.h>
@@ -35,6 +36,7 @@ void logger::vlog(log_level_type level, const char* message, va_list args) {
 
     // Whether to keep the color in rest of the message
     bool keep_color = false;
+    bool panic = false;
 
     switch (level) {
         case LOG_LEVEL_TRACE: {
@@ -78,6 +80,7 @@ void logger::vlog(log_level_type level, const char* message, va_list args) {
             name = "EMERGENCY";
             color = "31";  // Red
             keep_color = true;
+            panic = true;
             break;
         }
     }
@@ -95,4 +98,8 @@ void logger::vlog(log_level_type level, const char* message, va_list args) {
     }
 
     printf("\n");
+
+    if (panic) {
+        halt(false);
+    }
 }

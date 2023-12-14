@@ -5,8 +5,16 @@
 #include <sys/types.h>
 #include <system/compiler.h>
 
-
 __BEGIN_CDECLS
+
+struct iframe_t {
+    uint64_t rdi, rsi, rbp, rbx, rdx, rcx, rax;     // pushed by common handler
+    uint64_t r8, r9, r10, r11, r12, r13, r14, r15;  // pushed by common handler
+    uint64_t vector;                                // pushed by stub
+    uint64_t err_code;          // pushed by interrupt or stub
+    uint64_t ip, cs, flags;     // pushed by interrupt
+    uint64_t user_sp, user_ss;  // pushed by interrupt
+};
 
 static inline void x86_clts() {
     asm __volatile__("clts");
@@ -70,11 +78,52 @@ static inline void x86_pause() {
     asm volatile("pause");
 }
 
+static inline ulong x86_get_cr2() {
+    ulong rv;
+
+    __asm__ __volatile__("mov %%cr2, %0" : "=r"(rv));
+
+    return rv;
+}
+
+static inline ulong x86_get_cr3() {
+    ulong rv;
+
+    __asm__ __volatile__("mov %%cr3, %0" : "=r"(rv));
+    return rv;
+}
+
+static inline void x86_set_cr3(ulong in_val) {
+    __asm__ __volatile__("mov %0,%%cr3 \n\t" : : "r"(in_val));
+}
+
+static inline ulong x86_get_cr0() {
+    ulong rv;
+
+    __asm__ __volatile__("mov %%cr0, %0 \n\t" : "=r"(rv));
+    return rv;
+}
+
+static inline ulong x86_get_cr4() {
+    ulong rv;
+
+    __asm__ __volatile__("mov %%cr4, %0 \n\t" : "=r"(rv));
+    return rv;
+}
+
+static inline void x86_set_cr0(ulong in_val) {
+    __asm__ __volatile__("mov %0,%%cr0 \n\t" : : "r"(in_val));
+}
+
+static inline void x86_set_cr4(ulong in_val) {
+    __asm__ __volatile__("mov %0,%%cr4 \n\t" : : "r"(in_val));
+}
+
 #if !defined(__cplusplus)
 __NO_RETURN static inline void halt(bool interrupts) {
 #else
 __NO_RETURN static inline void halt(bool interrupts = true) {
-#endif // !defined(__cplusplus)
+#endif  // !defined(__cplusplus)
     if (interrupts) {
         while (true) {
             x86_hlt();
@@ -93,4 +142,4 @@ void arch_initialize();
 
 __END_CDECLS
 
-#endif // KERNEL_ARCH_X86_64_INCLUDE_ARCH_X86_H_
+#endif  // KERNEL_ARCH_X86_64_INCLUDE_ARCH_X86_H_

@@ -1,6 +1,6 @@
 #include <x86.h>
 #include <cpu/gdt.hpp>
-#include "system/log.h"
+#include <system/log.h>
 
 namespace arch {
 x86_tss per_cpu_tss[1] = {};
@@ -90,10 +90,10 @@ constexpr x86_tss initialize_tss_per_cpu() {
  * 
  * @param cpu_id 
  */
-void x86_initialize(size_t cpu_id) {
+void x86_gdt_initialize(size_t cpu_id) {
     per_cpu_tss[cpu_id] = initialize_tss_per_cpu();
 
-    x86_gdt gdt;
+    static x86_gdt gdt;
 
     gdt.null = make_gdt_entry(0, 0, 0, 0);
     gdt.code_selector = make_gdt_entry(0x0, 0xFFFFFFFF, 0b10, 0x9A);
@@ -102,7 +102,7 @@ void x86_initialize(size_t cpu_id) {
     gdt.user_data_selector = make_gdt_entry(0x0, 0xFFFFFFFF, 0x0, 0xF2);
     gdt.tss_selector = make_tss_entry(&per_cpu_tss[cpu_id]);
 
-    x86_gdt_register gdtr = {
+    static x86_gdt_register gdtr = {
         sizeof(x86_gdt) - 1,
         reinterpret_cast<uintptr_t>(&gdt),
     };

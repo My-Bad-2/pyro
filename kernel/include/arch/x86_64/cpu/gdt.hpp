@@ -65,7 +65,7 @@ constexpr x86_gdt_entry make_gdt_entry(uint32_t base, uint32_t limit,
                                        uint8_t granularity, uint8_t flags);
 x86_tss_entry make_tss_entry(x86_tss* tss);
 
-void x86_initialize(size_t cpu_id = 0);
+void x86_gdt_initialize(size_t cpu_id = 0);
 }  // namespace arch
 
 #endif  // !defined(__ASSEMBLER__)
