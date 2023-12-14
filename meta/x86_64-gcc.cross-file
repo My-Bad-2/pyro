@@ -3,8 +3,6 @@ c = 'x86_64-elf-gcc'
 cpp = 'x86_64-elf-g++'
 ar = 'x86_64-elf-ar'
 strip = 'x86_64-elf-strip'
-pkg-config = 'pkg-config'
-cmake = 'cmake'
 nasm = 'nasm'
 
 [built-in options]
