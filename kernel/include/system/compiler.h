@@ -284,6 +284,9 @@
 // Get the offset of `field` from the beginning of the struct or class `type`.
 #define __offsetof(type, field) __builtin_offsetof(type, field)
 
+// Return the address of a pointer
+#define __GET_ADDRESS(x) __builtin_addressof(x)
+
 // Return the number of elements in the given C-style array.
 //
 // TODO: add type check

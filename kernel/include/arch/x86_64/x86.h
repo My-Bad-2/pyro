@@ -97,6 +97,40 @@ static inline void x86_cli() {
     asm volatile("cli");
 }
 
+/// \brief Enable interrupts.
+///
+/// This inline assembly function executes the `STI` (Set Interrupt Enable) assembly instruction,
+/// which enables interrupts. Enabling interrupts allows the processor to respond to external
+/// hardware and software-generated interrupt requests.
+///
+/// \note This function is marked as volatile to indicate to the compiler that the assembly instruction
+/// has side effects and should not be optimized out.
+///
+/// Example Usage:
+/// ```cpp
+/// interrupt_enable();
+/// ```
+static inline void interrupt_enable() {
+    asm volatile("sti");
+}
+
+/// \brief Disable interrupts.
+///
+/// This inline assembly function executes the `CLI` (Clear Interrupt Enable) assembly instruction,
+/// which disables interrupts. Disabling interrupts prevents the processor from responding to
+/// external hardware and software-generated interrupt requests.
+///
+/// \note This function is marked as volatile to indicate to the compiler that the assembly instruction
+/// has side effects and should not be optimized out.
+///
+/// Example Usage:
+/// ```cpp
+/// interrupt_disable();
+/// ```
+static inline void interrupt_disable() {
+    asm volatile("cli");
+}
+
 /// \brief Load the Task Register (TR) with the specified selector.
 ///
 /// This inline assembly function executes the `LTR` (Load Task Register) assembly instruction,
@@ -265,6 +299,23 @@ static inline void x86_pause() {
     asm volatile("pause");
 }
 
+/// \brief Pause instruction for busy-wait loops.
+///
+/// This inline assembly function executes the `PAUSE` instruction, which is a hint to the processor
+/// that the current execution is a busy-wait loop. It can improve the performance of busy-wait loops
+/// by providing a hint to the processor to reduce power consumption.
+///
+/// \note This function is marked as volatile to indicate to the compiler that the assembly instruction
+/// has side effects and should not be optimized out.
+///
+/// Example Usage:
+/// ```cpp
+/// pause();
+/// ```
+static inline void pause() {
+    asm volatile("pause");
+}
+
 /// \brief Get the value of Control Register 2 (CR2).
 ///
 /// This inline assembly function retrieves the value of Control Register 2 (CR2), which contains the linear
@@ -401,6 +452,30 @@ __NO_RETURN static inline void halt(bool interrupts = true) {
             x86_hlt();
         }
     }
+}
+
+/// \brief Checks the interrupt status.
+///
+/// This function uses x86_64 inline assembly to check whether interrupts are enabled or disabled.
+/// It pushes the flags register onto the stack, tests the interrupt enable bit, and sets the
+/// interrupts_enabled variable accordingly.
+///
+/// \return true if interrupts are enabled, false if interrupts are disabled.
+static inline bool interrupt_status() {
+    bool interrupts_enabled;
+
+    // clang-format off
+    asm volatile(
+        "pushf;"               ///< Push the flags register onto the stack.
+        "pop %%rax;"           ///< Pop the flags value into rax.
+        "test $0x200, %%rax;"  ///< Test the IF (interrupt enable) bit (bit 9) in rax.
+        "setnz %0;"  ///< Set interrupts_enabled to true if the IF bit is set, false otherwise.
+        : "=r"(interrupts_enabled)  ///< Output operand: interrupts_enabled variable.
+        ::"rax"                  ///< Clobbered register: rax.
+    );
+    // clang-format on
+
+    return interrupts_enabled;
 }
 
 /// \brief Load the Global Descriptor Table (GDT).
