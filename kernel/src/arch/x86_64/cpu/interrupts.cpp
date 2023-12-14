@@ -38,7 +38,7 @@ static void dump_fault_frame(iframe_t* frame) {
     void* stack = frame;
 
     if (frame->cs == CODE_SELECTOR) {
-        printf("bottom of kernel stack at %p\n", stack);
+        printf("Bottom of kernel stack at %p\n", stack);
     }
 }
 }  // namespace

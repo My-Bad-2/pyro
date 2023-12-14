@@ -19,6 +19,4 @@ void arch_initialize() {
     arch::x86_gdt_initialize();
     arch::x86_idt_initialize();
     x86_sti();
-
-    asm volatile("div %ah");
 }
