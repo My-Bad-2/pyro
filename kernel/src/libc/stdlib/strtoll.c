@@ -2,41 +2,20 @@
 #include <limits.h>
 #include <stdlib.h>
 
-/**
- * @brief Interprets an integer value in a byte string pointed to by `str`.
- * 
- *  Discards any whitespace characters (as identified by calling `isspace`) until
- *  the first non-whitespace character is found, then takes as many characters as
- *  possible to form a valid base-n (where n=base) integer number representation and
- *  converts them to an integer value. The valid integer value consists of the following parts:
- *  1) plus or minus sign
- *  2) prefix (0) indicating octal base
- *  3) prefix (0x or 0X) indicating hexadecimal base
- *  4) a sequence of digits
- *
- *  The set of valid values for base is {0,2,3,...,36}. The set of valid digits for base-2 integers 
- *  is {0,1}, for base-3 integers is {0,1,2}, and so on. For bases larger than 10, valid digits include
- *  alphabetic characters, starting from Aa for base-11 integer, to Zz for base-36 integer. The case of
- *  the characters is ignored.
- *
- *  If the value of base is ​0​, the numeric base is auto-detected: if the prefix is 0, the base is octal,
- *  if the prefix is 0x or 0X, the base is hexadecimal, otherwise the base is decimal.
- *  If the minus sign was part of the input sequence, the numeric value calculated from the sequence of
- *  digits is negated as if by unary minus in the result type.
- *
- *  The function sets the pointer pointed to by `endptr` to point to the character past the last character
- *  interpreted. If `endptr` is a null pointer, it is ignored.
- *
- *  If the `nptr` is empty or does not have the expected form, no conversion is performed, and (if `endptr`
- *  is not a null pointer) the value of `nptr` is stored in the object pointed to by `endptr`.
- *
- * @param nptr pointer to the null-terminated string to be interpreted
- * @param endptr pointer to a pointer to character
- * @param base base of the interpreted integer value
- * @return long long If successful, an integer value corresponding to the contents of `str` is returned.
- *  If the converted value falls out of range of corresponding return type, a range error occurs and LLONG_MAX or LLONG_MIN is returned.
- *  If no conversion can be performed, 0 is returned.
- */
+/// \brief Converts a string to a long long integer.
+///
+/// The `strtoll` function converts the initial portion of the string pointed to by `nptr`
+/// to a long integer representation. It supports various bases (decimal, octal, or hexadecimal)
+/// and handles optional leading whitespace, an optional sign, and overflow/underflow scenarios.
+///
+/// \param nptr The string to convert.
+/// \param endptr A pointer to the character that stopped the scan.
+/// \param base The base for the conversion (0 for auto-detection).
+/// \return The converted long long integer value.
+///
+/// \note If `endptr` is not NULL, it is set to the character that stopped the scan.
+/// \note If no conversion could be performed, `strtoll` returns 0.
+/// \note If the correct value overflows, `strtoll` returns `LLONG_MAX` or `LLONG_MIN`.
 long long strtoll(const char* __restrict nptr, char** __restrict endptr,
                   int base) {
     const char* s;
@@ -74,23 +53,21 @@ long long strtoll(const char* __restrict nptr, char** __restrict endptr,
         base = (c == '0') ? 8 : 10;
     }
 
-    /**
-     * Compute the cutoff value between legal numbers and illegal
-     * numbers.  That is the largest legal value, divided by the
-     * base.  An input number that is greater than this value, if
-     * followed by a legal input character, is too big.  One that
-     * is equal to this value may be valid or not; the limit
-     * between valid and invalid numbers is then based on the last
-     * digit.  For instance, if the range for long longs is
-     * [-2147483648..2147483647] and the input base is 10,
-     * cutoff will be set to 214748364 and cutlim to either
-     * 7 (neg==0) or 8 (neg==1), meaning that if we have accumulated
-     * a value > 214748364, or equal but the next digit is > 7 (or 8),
-     * the number is too big, and we will return a range error.
-     *
-     * Set any if any `digits' consumed; make it negative to indicate
-     * overflow.
-     */
+    // Compute the cutoff value between legal numbers and illegal
+    // numbers.  That is the largest legal value, divided by the
+    // base.  An input number that is greater than this value, if
+    // followed by a legal input character, is too big.  One that
+    // is equal to this value may be valid or not; the limit
+    // between valid and invalid numbers is then based on the last
+    // digit.  For instance, if the range for long longs is
+    // [-2147483648..2147483647] and the input base is 10,
+    // cutoff will be set to 214748364 and cutlim to either
+    // 7 (neg==0) or 8 (neg==1), meaning that if we have accumulated
+    // a value > 214748364, or equal but the next digit is > 7 (or 8),
+    // the number is too big, and we will return a range error.
+    //
+    // Set any if any `digits' consumed; make it negative to indicate
+    // overflow.
     cutoff = neg ? LLONG_MIN : LLONG_MAX;
     cutlim = (int)(cutoff % base);
     cutoff /= base;

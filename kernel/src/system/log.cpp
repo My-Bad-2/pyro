@@ -4,32 +4,36 @@
 #include <system/log.h>
 #include <system/log.hpp>
 
-/**
- * @brief Print out log messages of severity `level`.
- *  Format: [task_name - `level`] message...
- *  Follows `stdio:printf` style formatting tags to format `message`
- *
- * @param level severity level
- * @param message message to print
- * @param ... arguments
- */
+/// \brief Logs a message with the specified log level.
+///
+/// This member function logs a message with the specified log level using a
+/// variable argument list. The log level indicates the severity of the message.
+/// The format of the message is specified using a format string and additional
+/// arguments.
+///
+/// \param level The log level indicating the severity of the message.
+/// \param message The format string for the log message.
+/// \param ... Additional arguments for formatting the log message.
 void logger::log(log_level_type level, const char* message, ...) {
     va_list args;
     va_start(args, message);
 
+    // Call the vlog function with variable arguments.
     vlog(level, message, args);
 
     va_end(args);
 }
 
-/**
- * @brief helper function for `logger::log`
- *  Format: [task_name - `level`] message...
- *  
- * @param level severity level
- * @param message message to print
- * @param args arguments
- */
+/// \brief Logs a message with the specified log level using variable arguments.
+///
+/// This member function logs a message with the specified log level using a
+/// variable argument list. The log level indicates the severity of the message.
+/// The format of the message is specified using a format string and additional
+/// arguments.
+///
+/// \param level The log level indicating the severity of the message.
+/// \param message The format string for the log message.
+/// \param ... Additional arguments for formatting the log message.
 void logger::vlog(log_level_type level, const char* message, va_list args) {
     const char* name = "";
     const char* color = "";
@@ -85,21 +89,26 @@ void logger::vlog(log_level_type level, const char* message, va_list args) {
         }
     }
 
+    // print log level with color
     printf("\033[1;%sm[%s\033[0m] ", color, name);
 
     if (keep_color) {
+        // keep color for the rest of the message
         printf("\033[0;%sm", color);
     }
 
+    // print the formatted log message using `vprintf`
     vprintf(message, args);
 
     if (keep_color) {
+        // reset color
         printf("\033[0m");
     }
 
     printf("\n");
 
     if (panic) {
+        // halt the program with interrupts disabled.
         halt(false);
     }
 }

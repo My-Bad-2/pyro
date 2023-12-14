@@ -2,113 +2,110 @@
 #include <limits.h>
 #include <stdlib.h>
 
-/**
- * @brief Interprets an integer value in a byte string pointed to by nptr. The implied radix is always 10.
- *  Discards any whitespace characters until the first non-whitespace character is found, then takes as many
- *  characters as possible to form a valid integer number representation and converts them to an integer value.
- *  The valid integer value consists of the following parts: 
- *  1) (optional) plus or minus sign
- *  2) numeric digits
- * 
- * @param nptr pointer to the null terminated byte-string to be interpreted
- * @return int Integer value corresponding to the contents of `nptr` on success.
- *  If no conversion can be performed, 0 is returned.
- */
-int atoi(const char* nptr) {
-    while (isspace((unsigned char)(*nptr))) {
-        ++nptr;
-    }
-
-    int neg = 0;
-
-    if (*nptr == '+') {
-        ++nptr;
-    } else if (*nptr == '-') {
-        ++nptr;
-        neg = 1;
-    }
-
+/// \brief Converts a string to an integer.
+///
+/// The `atoi` function converts the initial portion of the string `str` to an integer representation.
+/// This implementation supports leading whitespace, an optional sign, and stops conversion at the first non-digit character.
+/// Overflow and underflow are handled by saturating the result to the maximum or minimum representable integer value.
+///
+/// \param str The string to convert.
+/// \return The converted integer value.
+int atoi(const char* str) {
     int result = 0;
+    int sign = 1;
 
-    for (; isdigit((unsigned char)(*nptr)); ++nptr) {
-        int digit = *nptr - '0';
-        result *= 10;
-        result -= digit;
+    // Skip leading whitespace
+    while (isspace(*str)) {
+        str++;
     }
 
-    return neg ? result : -result;
+    // Handle optional sign
+    if (*str == '-' || *str == '+') {
+        sign = (*str++ == '-') ? -1 : 1;
+    }
+
+    // Process digits
+    while (isdigit(*str)) {
+        // Check for overflow
+        if (result > INT_MAX / 10 ||
+            (result == INT_MAX / 10 && (*str - '0') > INT_MAX % 10)) {
+            return sign == 1 ? INT_MAX : INT_MIN;
+        }
+
+        result = result * 10 + (*str++ - '0');
+    }
+
+    return result * sign;
 }
 
-/**
- * @brief Interprets an integer value in a byte string pointed to by nptr. The implied radix is always 10.
- *  Discards any whitespace characters until the first non-whitespace character is found, then takes as many
- *  characters as possible to form a valid integer number representation and converts them to an integer value.
- *  The valid integer value consists of the following parts: 
- *  1) (optional) plus or minus sign
- *  2) numeric digits
- * 
- * @param nptr pointer to the null terminated byte-string to be interpreted
- * @return long Integer value corresponding to the contents of `nptr` on success.
- *  If no conversion can be performed, 0 is returned.
- */
-long atol(const char* nptr) {
-    while (isspace((unsigned char)(*nptr))) {
-        ++nptr;
-    }
-
-    int neg = 0;
-
-    if (*nptr == '+') {
-        ++nptr;
-    } else if (*nptr == '-') {
-        ++nptr;
-        neg = 1;
-    }
-
+/// \brief Converts a string to a long integer.
+///
+/// The `atol` function converts the initial portion of the string `str` to a long integer representation.
+/// This implementation supports leading whitespace, an optional sign, and stops conversion at the first non-digit character.
+/// Overflow and underflow are handled by saturating the result to the maximum or minimum representable long integer value.
+///
+/// \param str The string to convert.
+/// \return The converted long integer value.
+long atol(const char* str) {
     long result = 0;
+    int sign = 1;
 
-    for (; isdigit((unsigned char)(*nptr)); ++nptr) {
-        int digit = *nptr - '0';
-        result *= 10;
-        result -= digit;
+    // Skip leading whitespace
+    while (isspace(*str)) {
+        str++;
     }
 
-    return neg ? result : -result;
+    // Handle optional sign
+    if (*str == '-' || *str == '+') {
+        sign = (*str++ == '-') ? -1 : 1;
+    }
+
+    // Process digits
+    while (isdigit(*str)) {
+        // Check for overflow
+        if (result > LONG_MAX / 10 ||
+            (result == LONG_MAX / 10 && (*str - '0') > LONG_MAX % 10)) {
+            return sign == 1 ? LONG_MAX : LONG_MIN;
+        }
+
+        result = result * 10 + (*str++ - '0');
+    }
+
+    return result * sign;
 }
 
-/**
- * @brief Interprets an integer value in a byte string pointed to by nptr. The implied radix is always 10.
- *  Discards any whitespace characters until the first non-whitespace character is found, then takes as many
- *  characters as possible to form a valid integer number representation and converts them to an integer value.
- *  The valid integer value consists of the following parts: 
- *  1) (optional) plus or minus sign
- *  2) numeric digits
- * 
- * @param nptr pointer to the null terminated byte-string to be interpreted
- * @return long long Integer value corresponding to the contents of `nptr` on success.
- *  If no conversion can be performed, 0 is returned.
- */
-long long atoll(const char* nptr) {
-    while (isspace((unsigned char)(*nptr))) {
-        ++nptr;
-    }
-
-    int neg = 0;
-
-    if (*nptr == '+') {
-        ++nptr;
-    } else if (*nptr == '-') {
-        ++nptr;
-        neg = 1;
-    }
-
+/// \brief Converts a string to a long long integer.
+///
+/// The `atoll` function converts the initial portion of the string `str` to a long long integer representation.
+/// This implementation supports leading whitespace, an optional sign, and stops conversion at the first non-digit character.
+/// Overflow and underflow are handled by saturating the result to the maximum or minimum representable long long integer value.
+///
+/// \param str The string to convert.
+/// \return The converted long long integer value.
+long long atoll(const char* str) {
     long long result = 0;
+    int sign = 1;
 
-    for (; isdigit((unsigned char)(*nptr)); ++nptr) {
-        int digit = *nptr - '0';
-        result *= 10;
-        result -= digit;
+    // Skip leading whitespace
+    while (isspace(*str)) {
+        str++;
     }
 
-    return neg ? result : -result;
+    // Handle optional sign
+    if (*str == '-' || *str == '+') {
+        sign = (*str++ == '-') ? -1 : 1;
+    }
+
+    // Process digits
+    while (isdigit(*str)) {
+        // Check for overflow
+        if (result > LLONG_MAX / 10 ||
+            (result == LLONG_MAX / 10 && (*str - '0') > LLONG_MAX % 10)) {
+            return sign == 1 ? LLONG_MAX : LLONG_MIN;
+        }
+
+        result = result * 10 + (*str++ - '0');
+    }
+
+    return result * sign;
 }

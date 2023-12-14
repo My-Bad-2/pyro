@@ -1,65 +1,40 @@
 #ifndef KERNEL_INCLUDE_ARCH_X86_64_CPU_INTERRUPTS_H_
 #define KERNEL_INCLUDE_ARCH_X86_64_CPU_INTERRUPTS_H_
 
-#define X86_IFRAME_OFFSET_RDI (0 * 8)
-#define X86_IFRAME_OFFSET_RSI (1 * 8)
-#define X86_IFRAME_OFFSET_RBP (2 * 8)
-#define X86_IFRAME_OFFSET_RBX (3 * 8)
-#define X86_IFRAME_OFFSET_RDX (4 * 8)
-#define X86_IFRAME_OFFSET_RCX (5 * 8)
-#define X86_IFRAME_OFFSET_RAX (6 * 8)
-#define X86_IFRAME_OFFSET_R8 (7 * 8)
-#define X86_IFRAME_OFFSET_R9 (8 * 8)
-#define X86_IFRAME_OFFSET_R10 (9 * 8)
-#define X86_IFRAME_OFFSET_R11 (10 * 8)
-#define X86_IFRAME_OFFSET_R12 (11 * 8)
-#define X86_IFRAME_OFFSET_R13 (12 * 8)
-#define X86_IFRAME_OFFSET_R14 (13 * 8)
-#define X86_IFRAME_OFFSET_R15 (14 * 8)
+// clang-format off
 
-#define X86_IFRAME_OFFSET_VECTOR (15 * 8)
-#define X86_IFRAME_OFFSET_ERR_CODE (16 * 8)
-
-#define X86_IFRAME_OFFSET_IP (17 * 8)
-#define X86_IFRAME_OFFSET_CS (18 * 8)
-#define X86_IFRAME_OFFSET_FLAGS (19 * 8)
-#define X86_IFRAME_OFFSET_USER_SP (20 * 8)
-#define X86_IFRAME_OFFSET_USER_SS (21 * 8)
-
-#define X86_IFRAME_SIZE (22 * 8)
-
-#if !defined(__ASSEMBLER__)
-
+/// \enum x86_interrupt_vector
+/// \brief Represents x86 interrupt vectors.
 enum x86_interrupt_vector {
-    X86_INT_DIVIDE_0 = 0,
-    X86_INT_DEBUG,
-    X86_INT_NMI,
-    X86_INT_BREAKPOINT,
-    X86_INT_OVERFLOW,
-    X86_INT_BOUND_RANGE,
-    X86_INT_INVALID_OP,
-    X86_INT_DEVICE_NA,
-    X86_INT_DOUBLE_FAULT,
-    X86_INT_INVALID_TSS = 0xa,
-    X86_INT_SEGMENT_NOT_PRESENT,
-    X86_INT_STACK_FAULT,
-    X86_INT_GP_FAULT,
-    X86_INT_PAGE_FAULT,
-    X86_INT_RESERVED,
-    X86_INT_FPU_FP_ERROR,
-    X86_INT_ALIGNMENT_CHECK,
-    X86_INT_MACHINE_CHECK,
-    X86_INT_SIMD_FP_ERROR,
-    X86_INT_VIRT,
-    X86_INT_MAX_INTEL_DEFINED = 0x1f,
+    X86_INT_DIVIDE_0 = 0,         ///< Divide Error Exception
+    X86_INT_DEBUG,                ///< Debug Exception
+    X86_INT_NMI,                  ///< Non-Maskable Interrupt
+    X86_INT_BREAKPOINT,           ///< Breakpoint Exception
+    X86_INT_OVERFLOW,             ///< Overflow Exception
+    X86_INT_BOUND_RANGE,          ///< BOUND Range Exceeded Exception
+    X86_INT_INVALID_OP,           ///< Invalid Opcode Exception
+    X86_INT_DEVICE_NA,            ///< Device Not Available Exception
+    X86_INT_DOUBLE_FAULT,         ///< Double Fault Exception
+    X86_INT_INVALID_TSS,          ///< Invalid TSS Exception
+    X86_INT_SEGMENT_NOT_PRESENT,  ///< Segment Not Present Exception
+    X86_INT_STACK_FAULT,          ///< Stack Fault Exception
+    X86_INT_GP_FAULT,             ///< General Protection Fault Exception
+    X86_INT_PAGE_FAULT,           ///< Page Fault Exception
+    X86_INT_RESERVED,             ///< Reserved Exception
+    X86_INT_FPU_FP_ERROR,         ///< x87 FPU Floating-Point Error Exception
+    X86_INT_ALIGNMENT_CHECK,      ///< Alignment Check Exception
+    X86_INT_MACHINE_CHECK,        ///< Machine Check Exception
+    X86_INT_SIMD_FP_ERROR,        ///< SIMD Floating-Point Exception
+    X86_INT_VIRT,                 ///< Virtualization Exception
+    X86_INT_MAX_INTEL_DEFINED = 0x1f,  ///< Maximum vector number for Intel-defined exceptions
 
-    X86_INT_PLATFORM_BASE = 0x20,
-    X86_INT_PLATFORM_MAX = 0xef,
+    X86_INT_PLATFORM_BASE = 0x20,  ///< Base number for platform-specific interrupts
+    X86_INT_PLATFORM_MAX = 0xef,  ///< Maximum number for platform-specific interrupts
 
-    X86_INT_MAX = 0xff,
-    X86_INT_COUNT,
+    X86_INT_MAX = 0xff,  ///< Maximum vector number
+    X86_INT_COUNT,       ///< Number of interrupt vectors
 };
 
-#endif // !defined(__ASSEMBLER__)
+// clang-format on
 
 #endif  // KERNEL_INCLUDE_ARCH_X86_64_CPU_INTERRUPTS_H_

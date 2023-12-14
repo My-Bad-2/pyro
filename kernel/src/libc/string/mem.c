@@ -6,240 +6,250 @@ typedef int word;
 #define wsize sizeof(word)
 #define wmask (wsize - 1)
 
-/**
- * @brief Copies `count` bytes from the object pointed to by `src` to the object pointed to by `dest`. Both objects
- *  are reinterpreted as arrays of `unsigned char`.
- *
- *  If the objects overlap, the behavior is undefined.
- *  
- *  If either `dest` or `src` is an invalid or null pointer, the behavior is undefined, even if `count` is zero.
- *  
- *  If the objects are potentially-overlapping or not TriviallyCopyable, the behavior of memcpy is not specified
- *  and may be undefined.
- * 
- * @param dest pointer to the memory location to copy to
- * @param src pointer to the memory location to copy from
- * @param count number of bytes to copy
- * @return void* dest
- */
+/// \brief Copy memory from one location to another efficiently.
+///
+/// This function copies 'count' bytes of memory from the source 'src' to the
+/// destination 'dest' efficiently, utilizing architecture-specific features.
+///
+/// \param dest  Pointer to the destination memory.
+/// \param src   Pointer to the source memory.
+/// \param count Number of bytes to copy.
+///
+/// \return A pointer to the destination memory 'dest'.
 void* memcpy(void* __restrict dest, const void* __restrict src, size_t count) {
-    char* _dest = (char*)(dest);
-    const char* _src = (const char*)(src);
-    size_t t;
+    // Cast pointers to uint8_t* for byte-wise manipulation
+    uint8_t* _dest = (uint8_t*)dest;
+    const uint8_t* _src = (const uint8_t*)src;
 
-    if (count == 0 || _dest == _src) {
-        return dest;
+    // Check if pointers are aligned to copy in chunks of 8 bytes (64 bits)
+    if (((uintptr_t)_dest % sizeof(uint64_t) == 0) &&
+        ((uintptr_t)_src % sizeof(uint64_t) == 0) &&
+        (count >= sizeof(uint64_t))) {
+        // Copy in chunks of 64 bits (8 bytes) for efficiency
+        while (count >= sizeof(uint64_t)) {
+            *((uint64_t*)_dest) = *((const uint64_t*)_src);
+            _src += sizeof(uint64_t);
+            _dest += sizeof(uint64_t);
+            count -= sizeof(uint64_t);
+        }
     }
 
-    if ((unsigned long)(_dest) < (unsigned long)(_src)) {
-        // copy forward
-        t = (unsigned long)(_src);  // only need the low bits
-
-        if ((t | (unsigned long)(_dest)) & wmask) {
-            // Try to align operands. This can't be done
-            // unless the low bits match
-            if ((t ^ (unsigned long)(_dest)) & wmask || count < wsize) {
-                t = count;
-            } else {
-                t = wsize - (t & wmask);
+    // Check if there are remaining bytes to copy
+    if (count > 0) {
+        // Use word-wise copy for remaining bytes if possible
+        if (((uintptr_t)_dest % sizeof(uint32_t) == 0) &&
+            ((uintptr_t)_src % sizeof(uint32_t) == 0) &&
+            (count >= sizeof(uint32_t))) {
+            // Copy in chunks of 32 bits (4 bytes) for efficiency
+            while (count >= sizeof(uint32_t)) {
+                *((uint32_t*)_dest) = *((const uint32_t*)_src);
+                _src += sizeof(uint32_t);
+                _dest += sizeof(uint32_t);
+                count -= sizeof(uint32_t);
             }
-
-            count -= t;
-
-            do {
-                *_dest++ = *_src++;
-            } while (--t);
         }
 
-        // Copy whole words, then mop up any trailing bytes.
-        t = count / wsize;
-
-        if (t) {
-            do {
-                *(word*)(_dest) = *(word*)(_src);
-                _src += wsize;
-                _dest += wsize;
-            } while (--t);
+        // Copy any remaining bytes individually
+        while (count-- > 0) {
+            *_dest++ = *_src++;
         }
+    }
 
-        t = count & wmask;
+    // Return a pointer to the destination memory
+    return dest;
+}
 
-        if (t) {
-            do {
-                *_dest++ = *_src++;
-            } while (--t);
-        }
-    } else {
-        // Copy backwards. Otherwise essentially the same.
-        // Alignment works as before, except that it takes
-        // (t & wmask) bytes to align, not wsize-(t & wmask).
+/// \brief Copy memory from one location to another, handling overlapping regions.
+///
+/// This function copies 'count' bytes of memory from the source 'src' to the
+/// destination 'dest'. The memory regions can overlap, and the copy is performed
+/// in a way that ensures correct behavior in such cases.
+///
+/// \param dest  Pointer to the destination memory.
+/// \param src   Pointer to the source memory.
+/// \param count Number of bytes to copy.
+///
+/// \return A pointer to the destination memory 'dest'.
+void* memmove(void* dest, const void* src, size_t count) {
+    // Cast pointers to uint8_t* for byte-wise manipulation
+    uint8_t* _dest = (uint8_t*)dest;
+    const uint8_t* _src = (const uint8_t*)src;
+
+    // Check if src and dest overlap and determine the direction of copy
+    if (_src < _dest && _dest < _src + count) {
+        // Copy from end to start using word-wise copy for optimization
         _src += count;
         _dest += count;
 
-        t = (unsigned long)(src);
-
-        if ((t | (unsigned long)(_dest)) & wmask) {
-            if ((t ^ (unsigned long)(_dest)) & wmask || count <= wsize) {
-                t = count;
-            } else {
-                t &= wmask;
+        // Check if pointers are aligned to copy in chunks of 8 bytes (64 bits)
+        if (((uintptr_t)_dest % sizeof(uint64_t) == 0) &&
+            ((uintptr_t)_src % sizeof(uint64_t) == 0)) {
+            // Copy in chunks of 64 bits (8 bytes) for efficiency
+            while (count >= sizeof(uint64_t)) {
+                _src -= sizeof(uint64_t);
+                _dest -= sizeof(uint64_t);
+                *((uint64_t*)_dest) = *((const uint64_t*)_src);
+                count -= sizeof(uint64_t);
             }
-
-            count -= t;
-
-            do {
-                *--_dest = *--_src;
-            } while (--t);
         }
 
-        t = count / wsize;
-
-        if (t) {
-            do {
-                _src -= wsize;
-                _dest -= wsize;
-
-                *(word*)_dest = *(word*)_src;
-            } while (--t);
+        // Copy any remaining bytes individually
+        while (count-- > 0) {
+            *--_dest = *--_src;
+        }
+    } else {
+        // Copy from start to end using word-wise copy for optimization
+        // Check if pointers are aligned to copy in chunks of 8 bytes (64 bits)
+        if (((uintptr_t)_dest % sizeof(uint64_t) == 0) &&
+            ((uintptr_t)_src % sizeof(uint64_t) == 0)) {
+            // Copy in chunks of 64 bits (8 bytes) for efficiency
+            while (count >= sizeof(uint64_t)) {
+                *((uint64_t*)_dest) = *((const uint64_t*)_src);
+                _src += sizeof(uint64_t);
+                _dest += sizeof(uint64_t);
+                count -= sizeof(uint64_t);
+            }
         }
 
-        t = count & wmask;
-
-        if (t) {
-            do {
-                *--_dest = *--_src;
-            } while (--t);
+        // Copy any remaining bytes individually
+        while (count-- > 0) {
+            *_dest++ = *_src++;
         }
     }
 
+    // Return a pointer to the destination memory
     return dest;
 }
 
-/**
- * @brief Copies `count` characters from the object pointed to by `src` to the
- *  object pointed to by `dest`. Both objects are reinterpreted as arrays of `unsigned char`.
- *
- *  The objects may overlap: copying takes place as if the characters were copied to a temporary
- *  character array and then the characters were copied from the array to `dest`.
- *
- *  If either `dest` or `src` is an invalid or null pointer, the behavior is undefined, even if `count` is zero.
- *
- *  If the objects are potentially-overlapping or not TriviallyCopyable, the behavior of 
- *  `memmove` is not specified and may be undefined.
- * 
- * @param dest pointer to the memory location to copy to
- * @param src pointer to the memory location to copy from
- * @param count number of bytes to copy
- * @return void* dest
- */
-void* memmove(void* dest, const void* src, size_t count) {
-    const unsigned char* from = (const unsigned char*)(src);
-    unsigned char* to = (unsigned char*)(dest);
+/// \brief Set a block of memory to a specific value efficiently.
+///
+/// This function sets the first 'count' bytes of the memory block pointed to by
+/// 'dest' to the specified 'value' efficiently, utilizing architecture-specific
+/// features for optimized performance.
+///
+/// \param dest  Pointer to the memory block to be set.
+/// \param value The value to set in each byte.
+/// \param count Number of bytes to set.
+///
+/// \return A pointer to the destination memory 'dest'.
+void* memset(void* dest, int value, size_t count) {
+    // Cast pointer to uint8_t* for byte-wise manipulation
+    uint8_t* _dest = (uint8_t*)dest;
 
-    if (from == to || count == 0) {
-        return dest;
-    }
+    // Optimize for setting 8 bytes at a time (64 bits) if possible
+    if (((uintptr_t)_dest % sizeof(uint64_t) == 0) &&
+        (count >= sizeof(uint64_t))) {
+        // Set in chunks of 64 bits (8 bytes) for efficiency
+        uint64_t word_value =
+            ((uint64_t)value << 56) | ((uint64_t)value << 48) |
+            ((uint64_t)value << 40) | ((uint64_t)value << 32) |
+            ((uint64_t)value << 24) | ((uint64_t)value << 16) |
+            ((uint64_t)value << 8) | (uint64_t)value;
 
-    if (to > from && to - from < (int)(count)) {
-        // to overlaps with from
-        // <from....>
-        //     <to....>
-        // copy in reverse, to avoid overwriting from
-        for (size_t i = count - 1; i >= 0; i--) {
-            to[i] = from[i];
+        while (count >= sizeof(uint64_t)) {
+            *((uint64_t*)_dest) = word_value;
+            _dest += sizeof(uint64_t);
+            count -= sizeof(uint64_t);
         }
-
-        return dest;
     }
 
-    if (from > to && from - to < (int)(count)) {
-        // to overlaps with from
-        //    <from....>
-        // <to....>
-        // copy in reverse, to avoid overwriting from
-        for (size_t i = 0; i < count; i++) {
-            to[i] = from[i];
-        }
-
-        return dest;
-    }
-
-    memcpy(dest, src, count);
-
-    return dest;
-}
-
-/**
- * @brief Copies the value `(unsigned char)(ch)` into each of the first `count` characters
- *  of the object pointed to by dest. If the object is a potentially-overlapping subobject
- *  or is not TriviallyCopyable (e.g., scalar, C-compatible struct, or an array of trivially
- *  copyable type), the behavior is undefined. If `count` is greater than the size of the 
- *  object pointed to by `dest`, the behavior is undefined.
- * 
- * @param dest pointer to the object to fill
- * @param ch fill byte
- * @param count number of bytes to fill
- * @return void* dest
- */
-void* memset(void* dest, int ch, size_t count) {
-    unsigned char* ptr = (unsigned char*)(dest);
-
+    // Set any remaining bytes individually
     while (count-- > 0) {
-        *ptr = ch;
+        *_dest++ = (uint8_t)value;
     }
 
+    // Return a pointer to the destination memory
     return dest;
 }
 
-/**
- * @brief Reinterprets the objects pointed to by `lhs` and `rhs` as arrays of
- *  `unsigned char` and compares the first `count` bytes of these arrays. The
- *  comparison is done lexicographically.
- *  
- *  The sign of the result is the sign of the difference between the values of
- *  the first pair of bytes (both interpreted as `unsigned char`) that differ
- *  in the objects being compared.
- * 
- * @param lhs pointer to the memory buffers to compare
- * @param rhs pointer to the memory buffers to compare
- * @param count number of bytes to examine
- * @return int Negative value if the first differing byte (reinterpreted as `unsigned char`) in `lhs`
- *  is less than the corresponding byte in `rhs`.
- *  ​0​ if all count bytes of `lhs` and `rhs` are equal.
- *  Positive value if the first differing byte in lhs is greater than the corresponding byte in rhs.
- */
+/// \brief Compare two blocks of memory.
+///
+/// This function compares the first 'count' bytes of the memory blocks pointed
+/// to by 'lhs' and 'rhs'. It returns an integer less than, equal to, or greater
+/// than zero if the first differing byte (if any) is less than, equal to, or
+/// greater than 'rhs'.
+///
+/// \param lhs   Pointer to the first memory block.
+/// \param rhs   Pointer to the second memory block.
+/// \param count Number of bytes to compare.
+///
+/// \return An integer less than, equal to, or greater than zero.
 int memcmp(const void* lhs, const void* rhs, size_t count) {
-    if (count == 0) {
-        return 0;
+    const unsigned char* p1 = (const unsigned char*)lhs;
+    const unsigned char* p2 = (const unsigned char*)rhs;
+
+    // Compare memory in chunks of 8 bytes for efficiency
+    while (count >= sizeof(uint64_t)) {
+        uint64_t val1 = *((const uint64_t*)p1);
+        uint64_t val2 = *((const uint64_t*)p2);
+
+        if (val1 != val2) {
+            return (val1 < val2) ? -1 : 1;
+        }
+
+        p1 += sizeof(uint64_t);
+        p2 += sizeof(uint64_t);
+        count -= sizeof(uint64_t);
     }
 
-    const unsigned char* str1 = (const unsigned char*)(lhs);
-    const unsigned char* str2 = (const unsigned char*)(rhs);
+    // Compare any remaining bytes individually
+    while (count-- > 0) {
+        if (*p1 != *p2) {
+            return (*p1 < *p2) ? -1 : 1;
+        }
 
-    while (--count && *str1++ == *str2++)
-        ;
+        ++p1;
+        ++p2;
+    }
 
-    return str1 - str2;
+    // Memory blocks are equal
+    return 0;
 }
 
-/**
- * @brief Converts `ch` to `unsigned char` and locates the first occurrence of that
- *  value in the initial count bytes (each interpreted as `unsigned char`) of the
- *  object pointed to by `ptr`.
- * 
- * @param src pointer to the object to be examined
- * @param ch byte to search for
- * @param length max number of bytes to examine
- * @return void* pointer to the location of the byte, or a null pointer if no such byte is found.
- */
-void* memchr(const void* src, int ch, size_t length) {
-    const char* big = (const char*)(src);
+/// \brief Locate the last occurrence of a byte in a block of memory.
+///
+/// This function searches for the last occurrence of the byte 'ch' in the
+/// memory block pointed to by 'src'. The search is performed backward from
+/// the end of the block.
+///
+/// \param src Pointer to the memory block.
+/// \param ch  The byte to search for.
+/// \param n   Number of bytes in the memory block.
+///
+/// \return A pointer to the last occurrence of the byte, or NULL if not found.
+void* memrchr(const void* src, int ch, size_t n) {
+    const unsigned char* p = (const unsigned char*)src;
 
-    for (size_t n = 0; n < length; n++) {
-        if (big[n] == ch) {
-            return (void*)&big[n];
+    // Move to the end of the block
+    p += n;
+
+    // Perform word-wise backward search for 'ch'
+    while (n >= sizeof(uint64_t)) {
+        p -= sizeof(uint64_t);
+        uint64_t word = *((const uint64_t*)p);
+
+        // Check if 'ch' is present in the current word
+        if ((word & 0xFF) == (unsigned char)ch ||
+            ((word >> 8) & 0xFF) == (unsigned char)ch ||
+            ((word >> 16) & 0xFF) == (unsigned char)ch ||
+            ((word >> 24) & 0xFF) == (unsigned char)ch ||
+            ((word >> 32) & 0xFF) == (unsigned char)ch ||
+            ((word >> 40) & 0xFF) == (unsigned char)ch ||
+            ((word >> 48) & 0xFF) == (unsigned char)ch ||
+            ((word >> 56) & 0xFF) == (unsigned char)ch) {
+            return (void*)p;
+        }
+
+        n -= sizeof(uint64_t);
+    }
+
+    // Check any remaining bytes individually
+    while (n-- > 0) {
+        if (*--p == (unsigned char)ch) {
+            return (void*)p;
         }
     }
 
+    // Byte 'ch' not found in the memory block
     return NULL;
 }

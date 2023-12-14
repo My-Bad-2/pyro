@@ -3,11 +3,12 @@
 
 #include <system/compiler.h>
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 #define UTILS_NAMESPACE_BEGIN namespace utils {
 #define UTILS_NAMESPACE_END }
-#else
-#error Only include utils in C++ files
-#endif
+#else  // defined(__cplusplus)
+#define UTILS_NAMESPACE_BEGIN
+#define UTILS_NAMESPACE_END
+#endif  // defined(__cplusplus)
 
 #endif  // KERNEL_INCLUDE_UTILS_COMMON_H_

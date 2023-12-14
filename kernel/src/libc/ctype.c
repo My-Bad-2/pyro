@@ -1,208 +1,202 @@
 #include <ctype.h>
 
-/**
- * @brief Checks if the given character is an alphanumeric character.
- *  The following Characters are alphanumeric:
- *  1) digits (0123456789)
- *  2) uppercase letters (ABCDEFGHIJKLMNOPQRSTUVWXYZ)
- *  3) lowercase letters (abcdefghijklmnopqrstuvwxyz)
- * 
- * @param c character
- * @return int Non-zero value if the character is an alphanumeric character,
- *  0 otherwise.
- */
+/// \brief Check if a character is an alphanumeric character.
+///
+/// This function checks if the given character is an alphanumeric character,
+/// which includes letters (uppercase and lowercase) and digits.
+///
+/// \param ch The character to be checked.
+///
+/// \return Non-zero if the character is alphanumeric, 0 otherwise.
 int isalnum(int c) {
     return isalpha(c) || isdigit(c);
 }
 
-/**
- * @brief Checks if the given character is an alphabetic character.
- *  The following Characters are alphabetic:
- *  1) uppercase letters (ABCDEFGHIJKLMNOPQRSTUVWXYZ)
- *  2) lowercase letters (abcdefghijklmnopqrstuvwxyz)
- * 
- * @param c character
- * @return int Non-zero value if the character is an alphabetic character,
- *  0 otherwise.
- */
-int isalpha(int c) {
-    return ((unsigned int)(c) | 32) - 'a' < 26;
+/// \brief Check if a character is an alphabetic character.
+///
+/// This function checks if the given character is an alphabetic character,
+/// which includes both uppercase and lowercase letters.
+///
+/// \param ch The character to be checked.
+///
+/// \return Non-zero if the character is alphabetic, 0 otherwise.
+int isalpha(int ch) {
+    return isupper(ch) || islower(ch);
 }
 
-/**
- * @brief Test whether `c` is a 7-bit US-ASCII character code.
- * 
- * @param c character
- * @return int Non-zero value if `c` is a 7-bit US-ASCII character
- *  code between 0 and 127 inclusive, 0 otherwise.
- */
-int isascii(int c) {
-    return !(c & ~0x7F);
+/// \brief Check if a character is an ASCII character.
+///
+/// This function checks if the given character is an ASCII character, which
+/// means its ASCII value falls within the range [0, 127].
+///
+/// \param ch The character to be checked.
+///
+/// \return Non-zero if the character is an ASCII character, 0 otherwise.
+int isascii(int ch) {
+    return ch >= 0 && ch <= 127;
 }
 
-/**
- * @brief Checks if the given character is a blank character. 
- *  Blank characters are whitespace characters used to separate 
- *  words within a sentence. By default, only space (0x20) and
- *  horizontal tab (0x09) are classified as blank characters.
- * 
- * @param c character
- * @return int None-zero value if the character is a blank
- *  character, zero otherwise.
- */
-int isblank(int c) {
-    return (c == ' ' || c == '\t');
+/// \brief Check if a character is a blank character.
+///
+/// This function checks if the given character is a blank character,
+/// which includes space (' ') and horizontal tab ('\t').
+///
+/// \param ch The character to be checked.
+///
+/// \return Non-zero if the character is a blank character, 0 otherwise.
+int isblank(int ch) {
+    return ch == ' ' || ch == '\t';
 }
 
-/**
- * @brief Checks if the given character is a control character.
- *  By default, the control characters are the characters with
- *  the codes 0x00-0x1F and 0x7F.
- * 
- * @param c character
- * @return int Non-zero value if the character is a control character,
- *  0 otherwise.
- */
-int iscntrl(int c) {
-    return (unsigned int)(c) < 0x20 || c == 0x7F;
+/// \brief Check if a character is a control character.
+///
+/// This function checks if the given character is a control character.
+/// Control characters are characters with ASCII values in the range [0, 31]
+/// and the character with the ASCII value 127 (DEL).
+///
+/// \param ch The character to be checked.
+///
+/// \return Non-zero if the character is a control character, 0 otherwise.
+int iscntrl(int ch) {
+    return (ch >= 0 && ch <= 31) || ch == 127;
 }
 
-/**
- * @brief Checks if the given character is one of the 10 decimal digits 0123456789
- * 
- * @param c character
- * @return int Non-zero value if the character is a numeric character, 0 otherwise.
- */
-int isdigit(int c) {
-    return (unsigned int)(c) - '0' < 16;
+/// \brief Check if a character is a decimal digit.
+///
+/// This function checks if the given character is a decimal digit, which
+/// includes the characters '0' to '9'.
+///
+/// \param ch The character to be checked.
+///
+/// \return Non-zero if the character is a decimal digit, 0 otherwise.
+int isdigit(int ch) {
+    return ch >= '0' && ch <= '9';
 }
 
-/**
- * @brief Checks if the given character is graphic (has a graphical representation).
- *  The following characters are graphic:
- *  1) digits (0123456789)
- *  2) uppercase letters (ABCDEFGHIJKLMNOPQRSTUVWXYZ)
- *  3) lowercase letters (abcdefghijklmnopqrstuvwxyz)
- *  4) punctuation characters (!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~)
- * 
- * @param c character
- * @return int Non-zero value if the character is has a graphical representation,
- *  0 otherwise.
- */
-int isgraph(int c) {
-    return (unsigned int)(c)-0x21 < 0x5E;
+/// \brief Check if a character is a printable character with a graphical representation.
+///
+/// This function checks if the given character is a printable character (excluding space)
+/// and has a graphical representation.
+///
+/// \param ch The character to be checked.
+///
+/// \return Non-zero if the character is a printable character with a graphical representation, 0 otherwise.
+int isgraph(int ch) {
+    return ch > ' ' && ch <= '~';
 }
 
-/**
- * @brief Checks if the given character is classified as a lowercase character.
- *  `islower` returns a nonzero value only for the lowercase letters (abcdefghijklmnopqrstuvwxyz).
- * 
- * @param c character
- * @return int Non-zero value if the character is a lowercase letter,
- *  0 otherwise.
- */
-int islower(int c) {
-    return (unsigned int)(c) - 'a' < 26;
+/// \brief Check if a character is a lowercase letter.
+///
+/// This function checks if the given character is a lowercase letter,
+/// which includes the characters 'a' to 'z'.
+///
+/// \param ch The character to be checked.
+///
+/// \return Non-zero if the character is a lowercase letter, 0 otherwise.
+int islower(int ch) {
+    return ch >= 'a' && ch <= 'z';
 }
 
-/**
- * @brief Checks if `c` is a printable character. By default, the following characters
- *  are printable:
- *  1) digits (0123456789)
- *  2) uppercase letters (ABCDEFGHIJKLMNOPQRSTUVWXYZ)
- *  3) lowercase letters (abcdefghijklmnopqrstuvwxyz)
- *  4) punctutation characters (!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~)
- *  5) space ( )
- * 
- * @param c character
- * @return int Non-zero value if the character can be printed, zero otherwise.
- */
-int isprint(int c) {
-    return (unsigned int)(c)-0x20 < 0x5F;
+/// \brief Check if a character is a printable character with a graphical representation.
+///
+/// This function checks if the given character is a printable character
+/// (including space) and has a graphical representation.
+///
+/// \param ch The character to be checked.
+///
+/// \return Non-zero if the character is a printable character with a graphical representation, 0 otherwise.
+int isprint(int ch) {
+    return ch >= ' ' && ch <= '~';
 }
 
-/**
- * @brief Checks if the given character is a punctuation character.
- *  By default, the characters !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~
- *  classify as punctuation.
- * 
- * @param c character
- * @return int Non-zero value if the character is a punctuation character, zero otherwise.
- */
-int ispunct(int c) {
-    return isgraph(c) && !isalnum(c);
+/// \brief Check if a character is a punctuation character.
+///
+/// This function checks if the given character is a punctuation character,
+/// which includes characters that are not control characters, digits, letters,
+/// or whitespace characters.
+///
+/// \param ch The character to be checked.
+///
+/// \return Non-zero if the character is a punctuation character, 0 otherwise.
+int ispunct(int ch) {
+    return isgraph(ch) && !isalnum(ch) && !isspace(ch);
 }
 
-/**
- * @brief Checks if the given character is whitespace character. The whitespace characters are
- *  the following:
- *  1) space (0x20, ' ')
- *  2) form feed (0x0c, '\f')
- *  3) line feed (0x0a, '\n')
- *  4) carriage return (0x0d, '\r')
- *  5) horizontal tab (0x09, '\t')
- *  6) vertical tab (0x0b, '\v')
- * 
- * @param c character
- * @return int Non-zero value if the character is a whitespace character, zero otherwise.
- */
-int isspace(int c) {
-    return c == ' ' || (unsigned int)(c) - '\t' < 5;
+/// \brief Check if a character is a whitespace character.
+///
+/// This function checks if the given character is a whitespace character,
+/// which includes space (' '), tab ('\t'), newline ('\n'), vertical tab ('\v'),
+/// form feed ('\f'), and carriage return ('\r').
+///
+/// \param ch The character to be checked.
+///
+/// \return Non-zero if the character is a whitespace character, 0 otherwise.
+int isspace(int ch) {
+    return ch == ' ' || (ch >= '\t' && ch <= '\r');
 }
 
-/**
- * @brief Checks if the given character is classified as a uppercase character.
- *  `isupper` returns a nonzero value only for the uppercase letters (ABCDEFGHIJKLMNOPQRSTUVWXYZ).
- * 
- * @param c character
- * @return int Non-zero value if the character is a uppercase letter,
- *  0 otherwise.
- */
-int isupper(int c) {
-    return (unsigned int)(c) - 'A' < 26;
+/// \brief Check if a character is an uppercase letter.
+///
+/// This function checks if the given character is an uppercase letter,
+/// which includes the characters 'A' to 'Z'.
+///
+/// \param ch The character to be checked.
+///
+/// \return Non-zero if the character is an uppercase letter, 0 otherwise.
+int isupper(int ch) {
+    return ch >= 'A' && ch <= 'Z';
 }
 
-/**
- * @brief Checks if the given character is a hexadecimal numeric
- *  character (0123456789abcdefABCDEF)
- * 
- * @param c character
- * @return int Non-zero value if the character is a hexadecimal numeric character, zero otherwise.
- */
-int isxdigit(int c) {
-    return isdigit(c) || ((unsigned int)(c) | 32) - 'a' < 6;
+/// \brief Check if a character is a hexadecimal digit.
+///
+/// This function checks if the given character is a hexadecimal digit,
+/// which includes the characters '0' to '9', 'A' to 'F', and 'a' to 'f'.
+///
+/// \param ch The character to be checked.
+///
+/// \return Non-zero if the character is a hexadecimal digit, 0 otherwise.
+int isxdigit(int ch) {
+    return isdigit(ch) || (ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f');
 }
 
-/**
- * @brief It determines to what character c would be mapped to in a 7–bit 
- *  US-ASCII locale and returns the corresponding character encoding.
- * 
- * @param c 
- * @return int Maps the character c to a 7-bit US-ASCII locale and returns the
- *  corresponding character encoding.
- */
+/// \brief Convert a character to its ASCII value.
+///
+/// This function converts the given character to its ASCII value by masking
+/// off any high-order bits that might be set.
+///
+/// \param ch The character to be converted.
+///
+/// \return The ASCII value of the character.
 int toascii(int c) {
     return c & 0x7F;
 }
 
-/**
- * @brief Converts the given character to lowercase.
- * 
- * @param c character
- * @return int Lowercase version of `c` or unmodified `c`
- *  if no lowercase version is listed.
- */
-int tolower(int c) {
-    return isupper(c) ? (c | 32) : c;
+/// \brief Convert a character to its lowercase equivalent.
+///
+/// This function converts the given character to its lowercase equivalent.
+///
+/// \param ch The character to be converted.
+///
+/// \return The lowercase equivalent of the character.
+int tolower(int ch) {
+    if (isupper(ch)) {
+        return ch + ('a' - 'A');
+    } else {
+        return ch;
+    }
 }
 
-/**
- * @brief Converts the given character to uppercase.
- * 
- * @param c character
- * @return int Uppercase version of `c` or unmodified `c`
- *  if no uppercase version is listed.
- */
-int toupper(int c) {
-    return islower(c) ? (c & 0x5F) : c;
+/// \brief Convert a character to its uppercase equivalent.
+///
+/// This function converts the given character to its uppercase equivalent.
+///
+/// \param ch The character to be converted.
+///
+/// \return The uppercase equivalent of the character.
+int toupper(int ch) {
+    if (islower(ch)) {
+        return ch - ('a' - 'A');
+    } else {
+        return ch;
+    }
 }

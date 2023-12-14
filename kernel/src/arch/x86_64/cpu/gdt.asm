@@ -5,22 +5,22 @@
 
 global load_gdt
 load_gdt:
-    lgdt [rdi]
-    ; Puts all the segments with their 
-    ; values targeting the data segment
-    mov ax, DATA_SELECTOR
+    lgdt [rdi]  ; Load the GDT from the memory location specified by the parameter rdi
 
+    ; Set up data segment registers
+    mov ax, DATA_SELECTOR
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
     mov ss, ax
 
-    mov rax, qword .trampoline ; return address
-    push qword CODE_SELECTOR
-    push rax
+    ; Set up a trampoline for far return
+    mov rax, qword .trampoline ; Return address
+    push qword CODE_SELECTOR    ; Push the code segment selector
+    push rax                    ; Push the return address
 
-    o64 retf ; far return
+    o64 retf ; Far return to the trampoline
 
 .trampoline:
-    ret
+    ret ; Return from the trampoline
