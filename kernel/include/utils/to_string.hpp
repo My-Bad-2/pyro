@@ -3,8 +3,7 @@
 
 #include <utils/common.h>
 
-UTILS_NAMESPACE_BEGIN
-
+namespace utils {
 /// \brief Converts an integer value to a string.
 ///
 /// Converts the given integer value to a dynamically allocated string.
@@ -60,7 +59,6 @@ char* to_string(unsigned long long value);
 /// \param value The pointer value to convert.
 /// \return A dynamically allocated string representation of the pointer value.
 char* to_string(void* value);
-
-UTILS_NAMESPACE_END
+}  // namespace utils
 
 #endif  // KERNEL_INCLUDE_UTILS_TO_STRING_HPP_

@@ -2,8 +2,7 @@
 #include <utils/mutex.hpp>
 #include "x86.h"
 
-UTILS_NAMESPACE_BEGIN
-
+namespace utils {
 /// \brief Acquires the lock.
 ///
 /// Atomically increments the next ticket and spins until the serving ticket matches the acquired ticket.
@@ -88,5 +87,4 @@ bool irq_lock::is_locked() {
     // Check if the lock is currently held
     return this->lock_.is_locked();
 }
-
-UTILS_NAMESPACE_END
+}  // namespace utils

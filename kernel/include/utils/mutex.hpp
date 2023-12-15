@@ -5,8 +5,7 @@
 #include <utils/common.h>
 #include <atomic>
 
-UTILS_NAMESPACE_BEGIN
-
+namespace utils {
 /// \struct ticket_spinlock
 /// \brief A simple ticket-based spinlock implementation.
 struct ticket_spinlock {
@@ -166,7 +165,6 @@ class scoped_lock {
     MutexType* mutex_;  ///< Pointer to the associated mutex.
     bool locked_;       ///< Flag indicating whether the lock is held.
 };
-
-UTILS_NAMESPACE_END
+}  // namespace utils
 
 #endif  // KERNEL_INCLUDE_UTILS_MUTEX_HPP_

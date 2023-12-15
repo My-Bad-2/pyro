@@ -1,4 +1,5 @@
 sources += files(
     'to_string.cpp',
-    'mutex.cpp'
+    'mutex.cpp',
+    'bitmap.cpp'
 )

@@ -7,8 +7,7 @@
 
 #include <utils/to_string.hpp>
 
-UTILS_NAMESPACE_BEGIN
-
+namespace utils {
 /// \brief Converts an integer value to a string.
 ///
 /// Converts the given integer value to a dynamically allocated string.
@@ -90,5 +89,4 @@ char* to_string(unsigned long long value) {
 char* to_string(void* value) {
     return to_string(reinterpret_cast<uintptr_t>(value));
 }
-
-UTILS_NAMESPACE_END
+}
