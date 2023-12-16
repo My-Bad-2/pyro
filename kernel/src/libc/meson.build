@@ -1,6 +1,7 @@
 sources += files(
     'ctype.c',
     'stdio.c',
+    'assert.c',
     'stdlib/abs.c',
     'stdlib/atoi.c',
     'stdlib/div.c',
