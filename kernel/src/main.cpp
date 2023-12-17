@@ -2,6 +2,7 @@
 #include <boot/bootinfo.h>
 #include <limine.h>
 #include <system/log.h>
+#include <utils/misc.hpp>
 
 /// \brief Initialize the Application Binary Interface (ABI).
 ///
@@ -15,8 +16,8 @@ extern "C" void abi_initialize();
 /// \brief Main function for kernel initialization.
 ///
 /// This function is the main entry point for the kernel. It initializes
-/// the ABI (Application Binary Interface) and the architecture-specific
-/// components before logging an informational message.
+/// the ABI (Application Binary Interface), utils library and the
+/// architecture-specific components before logging an informational message.
 ///
 /// \note This function is intended to be used as the starting point for
 ///       kernel initialization.
@@ -24,6 +25,9 @@ extern "C" void abi_initialize();
 extern "C" void kmain(bootinfo_t* bootinfo) {
     // Initialize ABI (Application Binary Interface)
     abi_initialize();
+
+    // Initialize utils library
+    utils::initialize(bootinfo);
 
     // Initialize architecture-specific components
     arch_initialize();

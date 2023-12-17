@@ -84,7 +84,6 @@ typedef struct {
     uint64_t hhdm_offset;  ///< Offset for HHDM (Higher Half Direct Map).
     void* virtual_base_address; ///< Kernel's virtual base address
     void* physical_base_address; ///< Kernel's physical base address
-    
 } bootinfo_t;
 
 #endif  // KERNEL_INCLUDE_BOOT_BOOTINFO_H_
