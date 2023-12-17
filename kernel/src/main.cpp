@@ -1,4 +1,5 @@
 #include <arch/arch.h>
+#include <boot/bootinfo.h>
 #include <limine.h>
 #include <system/log.h>
 
@@ -19,7 +20,8 @@ extern "C" void abi_initialize();
 ///
 /// \note This function is intended to be used as the starting point for
 ///       kernel initialization.
-extern "C" void kmain() {
+/// \param bootinfo Pointer to the boot information structure.
+extern "C" void kmain(bootinfo_t* bootinfo) {
     // Initialize ABI (Application Binary Interface)
     abi_initialize();
 
