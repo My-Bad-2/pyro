@@ -6,4 +6,5 @@ sources += files(
 subdir('libc')
 subdir('misc')
 subdir('system')
+subdir('utils')
 subdir('arch' / arch)

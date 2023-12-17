@@ -1,96 +1,136 @@
 #ifndef KERNEL_INCLUDE_UTILS_BITMAP_HPP_
 #define KERNEL_INCLUDE_UTILS_BITMAP_HPP_
 
+#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <utils/common.h>
-#include <optional>
 
 namespace utils {
-/// \def BLOCK_BITS
-/// \brief The number of bits in a block (size_t).
-///
-/// This constant represents the number of bits in a block of size_t.
-constexpr size_t BLOCK_BITS = sizeof(size_t) * 8;
-
-/// \brief Calculate the number of blocks required to represent a given number of bits.
-///
-/// This function calculates the number of blocks needed to represent a given number of bits.
-/// The calculation takes into account the size of a block (BLOCK_BITS) and rounds up if necessary.
-///
-/// \param bits The total number of bits.
-/// \return The number of blocks required to represent the specified number of bits.
-constexpr size_t calculate_blocks(size_t bits) {
-    /// \note The division is rounded up by adding 1 if there's a remainder.
-    return (bits % BLOCK_BITS == 0) ? (bits / BLOCK_BITS)
-                                    : (bits / BLOCK_BITS) + 1;
-}
-
-/// \class bitmap
-/// \brief Represents a simple bitmap using uint64_t blocks.
-///
-/// The Bitmap class provides a basic implementation of a bitmap using uint64_t blocks.
+/// \tparam T The type of elements stored in the bitmap.
+template <typename T>
 class bitmap {
    public:
-    /// \brief Constructor for the Bitmap class.
-    ///
-    /// Constructs a Bitmap object with the specified base address and size.
-    ///
-    /// \param base A pointer to the base address of the bitmap.
-    /// \param size The size of the bitmap in bits.
-    bitmap(uint64_t* base, size_t size);
+    /// \brief Default constructor.
+    constexpr bitmap() = default;
 
-    /// \brief Retrieves the value of the bit at the specified index.
+    /// \brief Parameterized constructor.
     ///
-    /// \param index The index of the bit to retrieve.
-    /// \return The value of the bit at the specified index.
-    int get(size_t index);
+    /// \param buffer Pointer to the buffer storing the bitmap data.
+    /// \param size Size of the buffer in terms of elements of type T.
+    constexpr bitmap(T* buffer, size_t size)
+        : buffer_(buffer), size_(size), initialized_(true) {}
 
-    /// \brief Sets the value of the bit at the specified index to 1.
-    ///
-    /// \param index The index of the bit to set.
-    void set(size_t index);
+    /// \brief Destructor.
+    constexpr ~bitmap() {}
 
-    /// \brief Clears the value of the bit at the specified index to 0.
+    /// \brief Initialize the bitmap with a buffer and size.
     ///
-    /// \param index The index of the bit to clear.
-    void clear(size_t index);
+    /// \param buffer Pointer to the buffer storing the bitmap data.
+    /// \param size Size of the buffer in terms of elements of type T.
+    void initialize(T* buffer, size_t size) {
+        assert(!this->initialized_);
 
-    /// \brief Finds the index of the first unset bit in the bitmap.
-    ///
-    /// This function searches for the first unset (0) bit in the bitmap and returns its index.
-    /// If all bits are set, it returns an empty optional.
-    ///
-    /// \return An optional containing the index of the first unset bit, or an empty optional if all bits are set.
-    std::optional<size_t> find_first_unset();
+        this->buffer_ = buffer;
+        this->size_ = size;
 
-    /// \brief Finds the index of the first set bit in the bitmap.
-    ///
-    /// This function searches for the first set (1) bit in the bitmap and returns its index.
-    /// If all bits are unset, it returns an empty optional.
-    ///
-    /// \return An optional containing the index of the first set bit, or an empty optional if all bits are unset.
-    std::optional<size_t> find_first_set();
+        this->initialized_ = true;
+    }
 
-    /// \brief Checks if the bit at the specified index is set (1).
+    /// \brief Nested bit structure representing a single bit in the bitmap.
+    struct bit {
+        bitmap& parent;  ///< Reference to the parent bitmap.
+        size_t index;    ///< Index of the bit within the bitmap.
+
+        /// \brief Constructor for the bit structure.
+        ///
+        /// \param parent Reference to the parent bitmap.
+        /// \param index Index of the bit within the bitmap.
+        constexpr bit(bitmap& parent, size_t index)
+            : parent(parent), index(index) {}
+
+        /// \brief Assignment operator for setting the value of the bit.
+        ///
+        /// \param value The value to be assigned to the bit.
+        constexpr void operator=(bool value) {
+            this->parent.set(this->index, value);
+        }
+
+        /// \brief Conversion operator to bool for retrieving the value of the bit.
+        ///
+        /// \return The value of the bit.
+        constexpr operator bool() const {
+            return this->parent.get(this->index);
+        }
+    };
+
+    /// \brief Overloaded subscript operator for accessing bits in the bitmap.
     ///
-    /// \param index The index of the bit to check.
-    /// \return True if the bit is set, false otherwise.
-    bool is_set(size_t index);
+    /// \param index Index of the bit to be accessed.
+    /// \return Bit reference for the specified index.
+    constexpr bit operator[](size_t index) {
+        assert(this->initialized_);
+        return bit(*this, index);
+    }
+
+    /// \brief Get the value of a specific bit in the bitmap.
+    ///
+    /// \param index Index of the bit to be retrieved.
+    /// \return The value of the specified bit.
+    constexpr bool get(size_t index) {
+        assert(this->initialized_);
+        return this->buffer_[index / bit_size()] & (1 << (index % bit_size()));
+    }
+
+    /// \brief Set the value of a specific bit in the bitmap.
+    ///
+    /// \param index Index of the bit to be set.
+    /// \param value The value to be set for the specified bit.
+    /// \return True if the operation was successful, false otherwise.
+    constexpr bool set(size_t index, bool value) {
+        assert(this->initialized_);
+
+        if (index > size_ * bit_size()) {
+            return false;
+        }
+
+        if (value) {
+            this->buffer_[index / bit_size()] |= (1 << (index % bit_size()));
+        } else {
+            this->buffer_[index / bit_size()] &= ~(1 << (index % bit_size()));
+        }
+
+        return true;
+    }
+
+    /// \brief Get the length of the bitmap.
+    ///
+    /// \return The length of the bitmap in terms of elements of type T.
+    constexpr size_t length() const { return this->initialized_ ? size_ : 0; }
+
+    /// \brief Get a pointer to the underlying buffer of the bitmap.
+    ///
+    /// \return Pointer to the buffer storing the bitmap data.
+    constexpr T* data() const { return this->buffer_; }
+
+    /// \brief Check if the bitmap is initialized.
+    ///
+    /// \return True if the bitmap is initialized, false otherwise.
+    constexpr bool initialized() const { return this->initialized_; }
 
    private:
-    /// \brief Calculates the number of uint64_t words needed to represent a given number of bits.
+    /// \brief Get the size of a `T` in bits.
     ///
-    /// This private method calculates the number of uint64_t words required to represent
-    /// a specified number of bits, considering the size of a block (BLOCK_BITS).
-    ///
-    /// \param size_in_bits The total number of bits.
-    /// \return The number of uint64_t words required to represent the specified number of bits.
-    size_t calculate_word_size(size_t size_in_bits);
+    /// \return The size of a `T` in bits.
+    constexpr size_t bit_size() const { return sizeof(T) * 8; }
 
    private:
-    uint64_t* data;       ///< Pointer to the base address of the bitmap.
-    size_t size_in_bits;  ///< The size of the bitmap in bits.
+    // clang-format off
+    bool initialized_ = false;  ///< Flag indicating whether the bitmap is initialized.
+    // clang-format on
+
+    T* buffer_ = nullptr;  ///< Pointer to the buffer storing the bitmap data.
+    size_t size_ = 0;  ///< Size of the buffer in terms of elements of type T.
 };
 }  // namespace utils
 

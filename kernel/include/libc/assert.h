@@ -3,6 +3,8 @@
 
 #include <system/compiler.h>
 
+__BEGIN_CDECLS
+
 /// \brief Runtime assertion function without a custom error message.
 ///
 /// This function is called when the specified condition (\p cond) is not met.
@@ -41,5 +43,7 @@ __NO_RETURN void __assert_msg(const char* cond, const char* message,
 /// \param msg The custom error message to display on assertion failure.
 #define assert_message(EX, msg) \
     (void)((EX) || (__assert_msg(#EX, msg, __FILE__, __LINE__), 0))
+
+__END_CDECLS
 
 #endif  // KERNEL_INCLUDE_LIBC_ASSERT_H_
