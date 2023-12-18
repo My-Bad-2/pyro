@@ -1,6 +1,7 @@
 #ifndef KERNEL_INCLUDE_BOOT_BOOTINFO_H_
 #define KERNEL_INCLUDE_BOOT_BOOTINFO_H_
 
+#include <limine.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -67,23 +68,28 @@ struct bootloader_info {
     char* version;  ///< Version of the bootloader.
 };
 
-/// \struct memory_map
+// // / \struct memory_map
+// // / \brief Structure to represent a memory map entry.
+// Doesn't work?
+// struct memory_map {
+// uint64_t base;  ///< Base address of the memory region.
+// uint64_t size;  ///< Size of the memory region.
+// uint64_t type;  ///< Type of the memory region.
+// };
+
+/// \typedef memory_map
 /// \brief Structure to represent a memory map entry.
-struct memory_map {
-    uint64_t base;  ///< Base address of the memory region.
-    uint64_t size;  ///< Size of the memory region.
-    uint64_t type;  ///< Type of the memory region.
-};
+typedef struct limine_memmap_entry memory_map;
 
 /// \typedef bootinfo_t
 /// \brief Typedef for the combined bootloader and memory map information.
 typedef struct {
     struct bootloader_info bootloader;  ///< Bootloader information.
-    struct memory_map* memmaps;         ///< An array of memory map entries.
+    memory_map** memmaps;               ///< An array of memory map entries.
     size_t memmap_size;                 ///< Total number of memory map entries.
-    uint64_t hhdm_offset;  ///< Offset for HHDM (Higher Half Direct Map).
-    void* virtual_base_address; ///< Kernel's virtual base address
-    void* physical_base_address; ///< Kernel's physical base address
+    uint64_t hhdm_offset;         ///< Offset for HHDM (Higher Half Direct Map).
+    void* virtual_base_address;   ///< Kernel's virtual base address
+    void* physical_base_address;  ///< Kernel's physical base address
 } bootinfo_t;
 
 #endif  // KERNEL_INCLUDE_BOOT_BOOTINFO_H_

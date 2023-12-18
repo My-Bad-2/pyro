@@ -1,0 +1,3 @@
+sources += files(
+    'pmm.cpp'
+)

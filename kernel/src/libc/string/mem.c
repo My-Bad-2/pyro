@@ -124,8 +124,7 @@ void* memmove(void* dest, const void* src, size_t count) {
 /// \brief Set a block of memory to a specific value efficiently.
 ///
 /// This function sets the first 'count' bytes of the memory block pointed to by
-/// 'dest' to the specified 'value' efficiently, utilizing architecture-specific
-/// features for optimized performance.
+/// 'dest' to the specified 'value'.
 ///
 /// \param dest  Pointer to the memory block to be set.
 /// \param value The value to set in each byte.
@@ -133,32 +132,12 @@ void* memmove(void* dest, const void* src, size_t count) {
 ///
 /// \return A pointer to the destination memory 'dest'.
 void* memset(void* dest, int value, size_t count) {
-    // Cast pointer to uint8_t* for byte-wise manipulation
-    uint8_t* _dest = (uint8_t*)dest;
+    unsigned char* ptr = (unsigned char*)(dest);
 
-    // Optimize for setting 8 bytes at a time (64 bits) if possible
-    if (((uintptr_t)_dest % sizeof(uint64_t) == 0) &&
-        (count >= sizeof(uint64_t))) {
-        // Set in chunks of 64 bits (8 bytes) for efficiency
-        uint64_t word_value =
-            ((uint64_t)value << 56) | ((uint64_t)value << 48) |
-            ((uint64_t)value << 40) | ((uint64_t)value << 32) |
-            ((uint64_t)value << 24) | ((uint64_t)value << 16) |
-            ((uint64_t)value << 8) | (uint64_t)value;
-
-        while (count >= sizeof(uint64_t)) {
-            *((uint64_t*)_dest) = word_value;
-            _dest += sizeof(uint64_t);
-            count -= sizeof(uint64_t);
-        }
-    }
-
-    // Set any remaining bytes individually
     while (count-- > 0) {
-        *_dest++ = (uint8_t)value;
+        *ptr = value;
     }
 
-    // Return a pointer to the destination memory
     return dest;
 }
 

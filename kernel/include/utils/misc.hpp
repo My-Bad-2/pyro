@@ -74,6 +74,22 @@ inline constexpr auto div_roundup(std::integral auto p1,
                                   std::integral auto p2) {
     return align_up(p1, p2) / p2;
 }
+
+/// \brief Check if a value is aligned to a specified boundary.
+///
+/// This template function checks if the given value of type T is aligned to the
+/// specified boundary (given by the size_t parameter n). Alignment is determined
+/// using the align_down function, which aligns the address down to the nearest
+/// multiple of n and checks if it matches the original address.
+///
+/// \tparam T Type of the value to be checked for alignment.
+/// \param a The value to check for alignment.
+/// \param n The alignment boundary.
+/// \return True if the value is aligned to the specified boundary; false otherwise.
+template <typename T>
+bool is_aligned(T a, size_t n) {
+    return align_down(uintptr_t(a), n) == uintptr_t(a);
+}
 }  // namespace utils
 
 #endif  // KERNEL_INCLUDE_UTILS_MISC_HPP_

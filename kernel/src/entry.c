@@ -57,16 +57,16 @@ static bootinfo_t build_bootinfo() {
 
     bootinfo.hhdm_offset = __hhdm_offset.response->offset;
 
-    struct memory_map memmaps[__memmap_entries.response->entry_count];
+    // struct memory_map* memmaps[__memmap_entries.response->entry_count];
 
     // Copy memory map entries to bootinfo
-    for (size_t i = 0; i < __memmap_entries.response->entry_count; i++) {
-        memmaps[i].base = __memmap_entries.response->entries[i]->base;
-        memmaps[i].size = __memmap_entries.response->entries[i]->length;
-        memmaps[i].type = __memmap_entries.response->entries[i]->type;
-    }
+    // for (size_t i = 0; i < __memmap_entries.response->entry_count; i++) {
+        // memmaps[i]->base = __memmap_entries.response->entries[i]->base;
+        // memmaps[i]->size = __memmap_entries.response->entries[i]->length;
+        // memmaps[i]->type = __memmap_entries.response->entries[i]->type;
+    // }
 
-    bootinfo.memmaps = memmaps;
+    bootinfo.memmaps = __memmap_entries.response->entries;
     bootinfo.memmap_size = __memmap_entries.response->entry_count;
 
     bootinfo.virtual_base_address =

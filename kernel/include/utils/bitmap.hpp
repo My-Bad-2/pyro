@@ -86,13 +86,11 @@ class bitmap {
     ///
     /// \param index Index of the bit to be set.
     /// \param value The value to be set for the specified bit.
-    /// \return True if the operation was successful, false otherwise.
+    /// \return True if the bit was set, False otherwise.
     constexpr bool set(size_t index, bool value) {
         assert(this->initialized_);
 
-        if (index > size_ * bit_size()) {
-            return false;
-        }
+        bool ret = this->get(index);
 
         if (value) {
             this->buffer_[index / bit_size()] |= (1 << (index % bit_size()));
@@ -100,7 +98,7 @@ class bitmap {
             this->buffer_[index / bit_size()] &= ~(1 << (index % bit_size()));
         }
 
-        return true;
+        return ret;
     }
 
     /// \brief Get the length of the bitmap.

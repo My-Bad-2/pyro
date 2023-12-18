@@ -1,7 +1,6 @@
 #include <arch/arch.h>
-#include <boot/bootinfo.h>
-#include <limine.h>
 #include <system/log.h>
+#include <memory/pmm.hpp>
 #include <utils/misc.hpp>
 
 /// \brief Initialize the Application Binary Interface (ABI).
@@ -13,25 +12,26 @@
 ///       phase of a kernel or similar low-level system software.
 extern "C" void abi_initialize();
 
-/// \brief Main function for kernel initialization.
+/// \brief Kernel entry point.
 ///
-/// This function is the main entry point for the kernel. It initializes
-/// the ABI (Application Binary Interface), utils library and the
-/// architecture-specific components before logging an informational message.
+/// The `kmain` function serves as the entry point for the kernel. It initializes
+/// the Application Binary Interface (ABI), the utils library, architecture-specific
+/// components, and physical memory management. Finally, it logs an informational message.
 ///
-/// \note This function is intended to be used as the starting point for
-///       kernel initialization.
-/// \param bootinfo Pointer to the boot information structure.
+/// \param bootinfo Boot information containing details about the system.
 extern "C" void kmain(bootinfo_t* bootinfo) {
-    // Initialize ABI (Application Binary Interface)
+    // Initialize Application Binary Interface (ABI).
     abi_initialize();
 
-    // Initialize utils library
+    // Initialize the utils library.
     utils::initialize(bootinfo);
 
-    // Initialize architecture-specific components
+    // Initialize architecture-specific components.
     arch_initialize();
 
-    // Log an informational message
+    // Initialize physical memory management.
+    memory::phys_initialize(bootinfo);
+
+    // Log an informational message.
     log_message(LOG_LEVEL_INFO, "Hello World!");
 }

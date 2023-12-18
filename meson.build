@@ -56,7 +56,8 @@ qemu = 'qemu-system-' + arch
 
 qemu_dbg_args = [
   '-no-reboot', '-no-shutdown',
-  '-d', 'int', '-D', logfile
+  '-d', 'int', '-D', logfile,
+  '-S', '-s'
 ]
 
 if arch == 'x86_64'
@@ -71,7 +72,7 @@ add_global_arguments(
   '-fno-omit-frame-pointer',
   '-fno-pic',
   '-fno-pie',
-  '-Ofast',
+  '-O3',
   language: ['c', 'cpp']
 )
 
