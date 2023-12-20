@@ -1,5 +1,6 @@
 #include <arch/arch.h>
 #include <system/log.h>
+#include <memory/heap.hpp>
 #include <memory/pmm.hpp>
 #include <utils/misc.hpp>
 
@@ -16,7 +17,8 @@ extern "C" void abi_initialize();
 ///
 /// The `kmain` function serves as the entry point for the kernel. It initializes
 /// the Application Binary Interface (ABI), the utils library, architecture-specific
-/// components, and physical memory management. Finally, it logs an informational message.
+/// components, physical memory management and kernel heap. Finally, it logs an
+/// informational message.
 ///
 /// \param bootinfo Boot information containing details about the system.
 extern "C" void kmain(bootinfo_t* bootinfo) {
@@ -31,6 +33,9 @@ extern "C" void kmain(bootinfo_t* bootinfo) {
 
     // Initialize physical memory management.
     memory::phys_initialize(bootinfo);
+
+    // Initialize Kernel heap.
+    memory::heap_initialize();
 
     // Log an informational message.
     log_message(LOG_LEVEL_INFO, "Hello World!");

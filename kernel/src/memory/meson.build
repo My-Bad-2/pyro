@@ -1,3 +1,5 @@
 sources += files(
-    'pmm.cpp'
+    'pmm.cpp',
+    'heap.cpp',
+    'slab.cpp'
 )
