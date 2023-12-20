@@ -396,7 +396,7 @@ size_t slab_allocator::alloc_size(void* ptr) {
 ///
 /// This constructor initializes the slab_allocator with a set of predefined slabs,
 /// each with a specific block size. The sizes are chosen based on common block sizes.
-slab_allocator::slab_allocator() {
+slab_allocator::slab_allocator() : initialized_(true) {
     this->slabs[0].initialize(8);
     this->slabs[1].initialize(16);
     this->slabs[2].initialize(24);
