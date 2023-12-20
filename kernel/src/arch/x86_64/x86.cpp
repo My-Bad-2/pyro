@@ -1,8 +1,8 @@
 #include <system/log.h>
 #include <x86.h>
 #include <cpu/gdt.hpp>
+#include <cpu/idt.hpp>
 #include <dev/serials.hpp>
-#include "cpu/idt.hpp"
 
 /**
  * @brief This function is responsible for initializing various components of the x86_64 architecture

@@ -90,6 +90,41 @@ template <typename T>
 bool is_aligned(T a, size_t n) {
     return align_down(uintptr_t(a), n) == uintptr_t(a);
 }
+
+/// \brief Template function to extract a range of bits from a value.
+/// \tparam HighBit The index of the highest bit in the range.
+/// \tparam LowBit The index of the lowest bit in the range.
+/// \tparam ReturnType The type of the return value.
+/// \tparam SourceType The type of the input value.
+/// \param input The input value from which to extract the bits.
+/// \return The extracted bits as the specified return type.
+template <size_t HighBit, size_t LowBit, typename ReturnType,
+          typename SourceType>
+constexpr inline ReturnType extract_bits(SourceType input) {
+    // +1 for inclusivity of the upper bound.
+    constexpr auto bit_count = HighBit + 1 - LowBit;
+
+    static_assert(HighBit >= LowBit,
+                  "High bit must be greater or equal to low bit.");
+    static_assert(HighBit < (sizeof(SourceType) * 8),
+                  "Source value ends before high bit");
+    static_assert(bit_count <= (sizeof(ReturnType) * 8),
+                  "Return type is not large enough to hold requested bits.");
+
+    auto pow2 = static_cast<SourceType>(1) << bit_count;
+    return static_cast<ReturnType>((input >> LowBit) & (pow2 - 1));
+}
+
+/// \brief Template function to extract a single bit from a value.
+/// \tparam Bit The index of the bit to extract.
+/// \tparam ReturnType The type of the return value.
+/// \tparam SourceType The type of the input value.
+/// \param input The input value from which to extract the bit.
+/// \return The extracted bit as the specified return type.
+template <size_t Bit, typename ReturnType, typename SourceType>
+constexpr inline ReturnType extract_bit(SourceType input) {
+    return extract_bits<Bit, Bit, ReturnType, SourceType>(input);
+}
 }  // namespace utils
 
 #endif  // KERNEL_INCLUDE_UTILS_MISC_HPP_

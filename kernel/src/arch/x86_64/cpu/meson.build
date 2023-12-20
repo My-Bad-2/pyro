@@ -4,7 +4,8 @@ sources += files(
     'idt.cpp',
     'interrupts.cpp',
     'interrupts.asm',
-    'pic.cpp'
+    'pic.cpp',
+    'cpuid.cpp'
 )
 
 asm_format = 'elf64'
