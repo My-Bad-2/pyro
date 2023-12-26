@@ -564,7 +564,7 @@ static inline bool x86_is_paging_enabled() {
 ///
 /// \return True if PAE is enabled, false otherwise.
 ///
-static inline bool x86_is_PAE_enabled() {
+static inline bool x86_is_pae_enabled() {
     if (!x86_is_paging_enabled()) {
         return false;
     }
