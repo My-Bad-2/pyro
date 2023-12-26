@@ -1,6 +1,7 @@
 #ifndef KERNEL_ARCH_X86_64_INCLUDE_ARCH_X86_H_
 #define KERNEL_ARCH_X86_64_INCLUDE_ARCH_X86_H_
 
+#include <registers.h>
 #include <stdbool.h>
 #include <sys/types.h>
 #include <system/compiler.h>
@@ -476,6 +477,99 @@ static inline bool interrupt_status() {
     // clang-format on
 
     return interrupts_enabled;
+}
+
+///
+/// \brief Invalidate the Translation Lookaside Buffer (TLB) entry for the specified virtual address.
+///
+/// \param address Virtual address to invalidate.
+///
+static inline void x86_invlpg(uint64_t address) {
+    asm volatile("invlpg (%0)" : : "r"(address));
+}
+
+///
+/// \brief Define accessor functions for x86_64 segment registers.
+///
+#define DEFINE_REGISTER_ACCESSOR(REG)                             \
+    static inline void set_##REG(uint16_t value) {                \
+        __asm__ volatile("mov %0, %%" #REG : : "r"(value));       \
+    }                                                             \
+    static inline uint16_t get_##REG() {                          \
+        uint16_t value;                                           \
+        __asm__ volatile("mov %%" #REG ", %0" : "=r"(value));     \
+        return value;                                             \
+    }
+
+DEFINE_REGISTER_ACCESSOR(ds)
+DEFINE_REGISTER_ACCESSOR(es)
+DEFINE_REGISTER_ACCESSOR(fs)
+DEFINE_REGISTER_ACCESSOR(gs)
+
+#undef DEFINE_REGISTER_ACCESSOR
+
+///
+/// \brief Read the value of the specified Model Specific Register (MSR).
+///
+/// \param msr_id MSR identifier.
+/// \return The value read from the MSR.
+///
+static inline uint64_t read_msr(uint32_t msr_id) {
+    uint32_t msr_read_val_lo;
+    uint32_t msr_read_val_hi;
+
+    asm volatile("rdmsr \n\t"
+                 : "=a"(msr_read_val_lo), "=d"(msr_read_val_hi)
+                 : "c"(msr_id));
+
+    return ((uint64_t)msr_read_val_hi << 32) | msr_read_val_lo;
+}
+
+///
+/// \brief Read the value of the specified 32-bit MSR.
+///
+/// \param msr_id MSR identifier.
+/// \return The value read from the MSR.
+///
+static inline uint32_t read_msr32(uint32_t msr_id) {
+    uint32_t msr_read_val;
+    asm volatile("rdmsr \n\t" : "=a"(msr_read_val) : "c"(msr_id) : "rdx");
+    return msr_read_val;
+}
+
+///
+/// \brief Write a value to the specified MSR.
+///
+/// \param msr_id MSR identifier.
+/// \param msr_write_val Value to write to the MSR.
+///
+static inline void write_msr(uint32_t msr_id, uint64_t msr_write_val) {
+    asm volatile("wrmsr \n\t"
+                 :
+                 : "c"(msr_id), "a"(msr_write_val & 0xffffffff),
+                   "d"(msr_write_val >> 32));
+}
+
+///
+/// \brief Check if paging is enabled in x86_64.
+///
+/// \return True if paging is enabled, false otherwise.
+///
+static inline bool x86_is_paging_enabled() {
+    return (x86_get_cr0() & X86_CR0_PG) != 0;
+}
+
+///
+/// \brief Check if Physical Address Extension (PAE) is enabled in x86_64.
+///
+/// \return True if PAE is enabled, false otherwise.
+///
+static inline bool x86_is_PAE_enabled() {
+    if (!x86_is_paging_enabled()) {
+        return false;
+    }
+
+    return (x86_get_cr4() & X86_CR4_PAE) != 0;
 }
 
 /// \brief Load the Global Descriptor Table (GDT).
