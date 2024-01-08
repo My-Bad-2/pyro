@@ -6,279 +6,232 @@
 #include <memory/memory.hpp>
 #include <memory/pmm.hpp>
 
-#include <utils/bitmap.hpp>
 #include <utils/misc.hpp>
-#include <utils/mutex.hpp>
 
 namespace memory {
+// clang-format off
+
 namespace {
-/// \brief Top address of usable memory.
-static uintptr_t __mem_usable_top = 0;
+utils::bitmap<uint8_t> phys_bitmap;  ///< Bitmap to track allocated physical memory pages.
+utils::ticket_spinlock phys_lock;  ///< Spinlock for synchronized access to physical memory management.
 
-/// \brief Index to the last allocated bitmap entry.
-static size_t __last_bitmap_index = 0;
+size_t last_index = 0;  ///< Last index used for tracking available memory pages.
+paddr_t highest_usable_memory = 0;  ///< Highest usable memory address.
 
-/// \brief Bitmap for tracking allocated and free memory pages.
-static utils::bitmap<uint8_t> __bitmap;
+size_t phys_page_size = 0;  ///< Size of a physical memory page.
 
-/// \brief Spinlock for thread-safe memory allocation and deallocation.
-static utils::ticket_spinlock __lock;
-
-/// \brief Global physical memory metadata.
-static struct {
-    size_t usable_mem;  ///< Total usable physical memory.
-    size_t total_mem;   ///< Total physical memory.
-    size_t used_mem;    ///< Used physical memory.
-} phys_glob_meta;
+size_t usable_mem = 0;  ///< Total usable physical memory.
+size_t total_mem = 0;   ///< Total physical memory.
+size_t used_mem = 0;    ///< Total used physical memory.
 }  // namespace
 
-/// \brief Allocate a block of physical memory at a specific location.
-///
-/// This function attempts to allocate a contiguous block of physical memory
-/// starting from the current bitmap index (`__last_bitmap_index`) up to the given limit.
-///
-/// \param limit Upper limit for the allocation.
-/// \param count Number of contiguous pages to allocate.
-/// \return An optional page_frame structure representing the allocated memory,
-///         or std::nullopt if the allocation fails.
-std::optional<page_frame> phys_alloc_at(uintptr_t limit, size_t count) {
-    size_t page = 0;
+// clang-format on
 
-    // Iterate through the bitmap entries starting from the last index.
-    while (__last_bitmap_index < limit) {
-        // Check if the current bitmap entry is free.
-        if (__bitmap[__last_bitmap_index++] == false) {
-            // Increment the page counter and check if the required number of pages is reached.
-            if (++page == count) {
-                // Calculate the base address of the allocated memory block.
-                size_t page_ = __last_bitmap_index - count;
+/// \brief Get information about the physical memory.
+///
+/// This function retrieves metadata about the physical memory, including total memory,
+/// used memory, and free memory.
+///
+/// \return A structure (\ref phys_metadata_t) containing the following information:
+///   - \c total_memory: The total size of physical memory in bytes.
+///   - \c used_memory: The amount of used physical memory in bytes.
+///   - \c free_memory: The amount of free physical memory in bytes.
+phys_metadata_t get_phys_info() {
+    phys_metadata_t data;
 
-                // Set the corresponding bitmap entries to mark them as allocated.
-                for (size_t i = page_; i < __last_bitmap_index; i++) {
-                    __bitmap[i] = true;
+    data.total_memory = total_mem;
+    data.used_memory = used_mem;
+    data.free_memory = total_mem - used_mem;
+
+    return data;
+}
+
+/// \brief Print physical memory metadata to the log.
+///
+/// This function retrieves physical memory metadata using \ref get_phys_info and prints
+/// it to the log with information on total memory, used memory, and free memory.
+void print_metadata() {
+    phys_metadata_t data = get_phys_info();
+
+    log_message(
+        LOG_LEVEL_DEBUG,
+        "Total Memory: %lu MB, Used Memory: %lu MB, Free Memory: %lu MB",
+        bytes_to_mb(data.total_memory), bytes_to_mb(data.used_memory),
+        bytes_to_mb(data.free_memory));
+}
+
+/// \brief Request a specific number of pages from the physical memory.
+///
+/// This function attempts to allocate a contiguous block of pages from the physical memory.
+///
+/// \param limit The upper limit of pages to search.
+/// \param count Number of pages to request.
+/// \return A pointer to the allocated memory or nullptr if allocation fails.
+void* request_page_(size_t limit, size_t count) {
+    size_t i = 0;
+
+    while (last_index < limit) {
+        if (!phys_bitmap[last_index++]) {
+            if (++i == count) {
+                size_t page = last_index - count;
+
+                // Mark the allocated pages as used in the bitmap
+                for (size_t j = page; j < last_index; ++j) {
+                    phys_bitmap[j] = true;
                 }
 
-                // Return the page_frame representing the allocated memory.
-                return page_frame(page_ * PAGE_SIZE, count);
+                return reinterpret_cast<void*>(page * phys_page_size);
             }
         } else {
-            // Reset the page counter if a used bitmap entry is encountered.
-            page = 0;
+            i = 0;
         }
     }
 
-    // Return std::nullopt if the allocation fails.
-    return std::nullopt;
+    return nullptr;
 }
 
-/// \brief Allocate a block of physical memory.
+/// \brief Request a specific number of pages from the physical memory.
 ///
-/// This function allocates a contiguous block of physical memory of the specified
-/// size in bytes. It uses the `phys_alloc_at` function to attempt allocation at the
-/// usable memory's top and, if unsuccessful, retries from the beginning of the bitmap.
+/// This function is a synchronized wrapper for \ref request_page_.
 ///
-/// \param count Number of bytes to allocate.
-/// \return Pointer to the allocated memory block, or nullptr if the allocation fails.
-void* phys_alloc(size_t count) {
-    // Return nullptr for zero-sized allocation requests.
+/// \param count Number of pages to request (default is 1).
+/// \return A pointer to the allocated memory or nullptr if allocation fails.
+/// \note The memory must be freed using \ref free_page when it is no longer needed.
+void* request_page(size_t count) {
     if (count == 0) {
         return nullptr;
     }
 
-    // Acquire a scoped lock to ensure thread safety during memory allocation.
-    utils::scoped_lock guard(__lock);
+    utils::scoped_lock guard(phys_lock);
 
-    // Save the current bitmap index.
-    size_t i = __last_bitmap_index;
+    size_t i = last_index;
+    void* ret = request_page_(highest_usable_memory / phys_page_size, count);
 
-    // Attempt to allocate at the top of usable memory.
-    std::optional<page_frame> frame =
-        phys_alloc_at(__mem_usable_top / PAGE_SIZE, count);
+    if (ret == nullptr) {
+        // Reset last_index and try again from the beginning
+        last_index = 0;
+        ret = request_page_(i, count);
 
-    // If allocation fails, reset the bitmap index and retry from the beginning.
-    if (frame == std::nullopt) {
-        __last_bitmap_index = 0;
-        frame = phys_alloc_at(i, count);
+        if (ret == nullptr) {
+            log_message(LOG_LEVEL_EMERGENCY, "Out of physical memory!");
+        }
     }
 
-    // If allocation still fails, log an emergency message.
-    if (frame == std::nullopt) {
-        log_message(LOG_LEVEL_EMERGENCY, "Out of Physical Memory!");
-    }
+    // Zero out the allocated memory
+    memset(utils::to_higher_half(ret), 0, count * phys_page_size);
+    used_mem += (count * phys_page_size);
 
-    // Calculate the base address of the allocated memory block.
-    void* ret = reinterpret_cast<void*>(frame->base);
-
-    // Clear the memory block to zero.
-    memset(utils::to_higher_half(ret), 0, frame->count * PAGE_SIZE);
-
-    // Update the used memory metadata.
-    phys_glob_meta.used_mem += frame->count * PAGE_SIZE;
-
-    // Return the pointer to the allocated memory block.
     return ret;
 }
 
-/// \brief Free a previously allocated page frame.
+/// \brief Free a specific number of pages in the physical memory.
 ///
-/// This function marks the corresponding entries in the bitmap as free for the
-/// specified page frame, effectively releasing the allocated physical memory.
+/// This function marks a range of pages as free in the physical memory bitmap.
 ///
-/// \param frame Page frame to be freed.
-void phys_free(page_frame frame) {
-    // Acquire a scoped lock to ensure thread safety during memory deallocation.
-    utils::scoped_lock guard(__lock);
-
-    // Calculate the starting page index for the given frame.
-    size_t page = frame.base / PAGE_SIZE;
-
-    // Iterate through the bitmap entries corresponding to the pages in the frame.
-    for (size_t i = page; i < (page + frame.count); i++) {
-        // Mark the bitmap entry as free.
-        __bitmap[i] = false;
-    }
-
-    // Update the used memory metadata by subtracting the freed memory size.
-    phys_glob_meta.used_mem -= frame.count * PAGE_SIZE;
-}
-
-/// \brief Free a block of previously allocated physical memory.
-///
-/// This function marks the corresponding entries in the bitmap as free for the
-/// specified memory block, effectively releasing the allocated physical memory.
-/// If the provided pointer is nullptr, the function returns without performing any action.
-///
-/// \param ptr Pointer to the memory block to be freed.
-/// \param count Number of bytes in the memory block.
-void phys_free(void* ptr, size_t count) {
-    // Return without performing any action for nullptr.
-    if (ptr == nullptr) {
+/// \param address Pointer to the starting address of the memory to free.
+/// \param count Number of pages to free (default is 1).
+void free_page(void* address, size_t count) {
+    if (address == nullptr) {
         return;
     }
 
-    // Create a page frame structure representing the memory block.
-    page_frame frame = page_frame(reinterpret_cast<uintptr_t>(ptr), count);
+    utils::scoped_lock guard(phys_lock);
 
-    // Delegate the memory deallocation to the phys_free function for a page frame.
-    phys_free(frame);
+    // Calculate the page index based on the provided address
+    size_t page = reinterpret_cast<paddr_t>(address) / phys_page_size;
+
+    // Mark the pages as free in the bitmap
+    for (size_t i = page; i < (page + count); ++i) {
+        phys_bitmap[i] = true;
+    }
+
+    // Update used memory count
+    used_mem -= count * phys_page_size;
 }
 
-/// \brief Retrieve physical memory information.
+/// \brief Initialize physical memory management.
 ///
-/// This function returns a phys_metadata structure containing information about
-/// the total, usable, used, and free physical memory.
+/// This function initializes the physical memory manager using the provided boot information
+/// and sets the size of a physical memory page.
 ///
-/// \return phys_metadata structure containing memory information.
-phys_metadata phys_info() {
-    // Create a phys_metadata structure to store memory information.
-    phys_metadata ret;
+/// \param bootinfo Pointer to the boot information.
+/// \param page_size Size of a physical memory page.
+void phys_initialize(bootinfo_t* bootinfo, size_t page_size) {
+    phys_page_size = page_size;
+    paddr_t top_mem = 0;
 
-    // Copy metadata values from the global metadata structure.
-    ret.total_mem = phys_glob_meta.total_mem;
-    ret.usable_mem = phys_glob_meta.usable_mem;
-    ret.used_mem = phys_glob_meta.used_mem;
+    // Initialize utils library with boot information
+    utils::initialize(bootinfo);
 
-    // Calculate the free memory as the the difference between usable and used memory.
-    ret.free_mem = phys_glob_meta.usable_mem - phys_glob_meta.used_mem;
+    // Iterate through the memory map provided by the bootloader
+    for (size_t i = 0; i < bootinfo->memmap_size; ++i) {
+        paddr_t top = bootinfo->memmaps[i]->base + bootinfo->memmaps[i]->length;
+        top_mem = std::max(top_mem, top);
 
-    // Return the phys_metadata structure with memory information.
-    return ret;
-}
-
-/// \brief Initialize physical memory management using boot information.
-///
-/// This function initializes the physical memory manager using the provided boot information.
-/// It calculates memory metadata, sets up a bitmap for tracking memory allocation,
-/// and logs relevant information.
-///
-/// \param bootinfo Boot information containing memory details.
-void phys_initialize(bootinfo_t* bootinfo) {
-    // Initialize a variable to track the top address of physical memory.
-    uintptr_t mem_top = 0;
-
-    // Iterate through the memory map entries in the boot information.
-    for (size_t i = 0; i < bootinfo->memmap_size; i++) {
-        // Calculate the top address of the current memory map entry.
-        uintptr_t top =
-            bootinfo->memmaps[i]->base + bootinfo->memmaps[i]->length;
-        mem_top = std::max(mem_top, top);
-
-        // Update global metadata based on the type of memory map entry.
         switch (bootinfo->memmaps[i]->type) {
             case MEMORY_MAP_USABLE:
-                phys_glob_meta.usable_mem += bootinfo->memmaps[i]->length;
-                __mem_usable_top = std::max(__mem_usable_top, top);
+                usable_mem += bootinfo->memmaps[i]->length;
+                highest_usable_memory = std::max(highest_usable_memory, top);
                 break;
             case MEMORY_MAP_KERNEL_AND_MODULES:
             case MEMORY_MAP_BOOTLOADER_RECLAIMABLE:
-                phys_glob_meta.used_mem += bootinfo->memmaps[i]->length;
+                used_mem += bootinfo->memmaps[i]->length;
                 break;
             default:
                 continue;
         }
 
-        // Update total physical memory.
-        phys_glob_meta.total_mem += bootinfo->memmaps[i]->length;
+        total_mem += bootinfo->memmaps[i]->length;
     }
 
-    // Calculate the size of the bitmap for tracking memory allocation.
-    size_t bitmap_entries = __mem_usable_top / PAGE_SIZE;
-    size_t bitmap_size = utils::align_up(bitmap_entries / 8, PAGE_SIZE);
+    // Calculate the number of entries needed for the physical memory bitmap
+    size_t bitmap_entries = highest_usable_memory / page_size;
+    size_t bitmap_size = utils::align_up(bitmap_entries / 8, page_size);
     bitmap_entries = bitmap_size * 8;
 
-    // Iterate through the memory map entries to find a suitable location for the bitmap.
-    for (size_t i = 0; i < bootinfo->memmap_size; i++) {
-        // Skip non-usable memory map entries.
+    // Find a suitable region in usable memory for the physical memory bitmap
+    for (size_t i = 0; i < bootinfo->memmap_size; ++i) {
         if (bootinfo->memmaps[i]->type != MEMORY_MAP_USABLE) {
             continue;
         }
 
-        // Check if the length of the memory map entry is sufficient for the bitmap.
+        // If the region is large enough for the bitmap, initialize it
         if (bootinfo->memmaps[i]->length >= bitmap_size) {
-            // Initialize the bitmap at the specified location.
-            __bitmap.initialize(
+            phys_bitmap.initialize(
                 reinterpret_cast<uint8_t*>(
                     utils::to_higher_half(bootinfo->memmaps[i]->base)),
                 bitmap_entries);
 
-            // Set all bitmap entries to mark them as used.
-            memset(__bitmap.data(), 0xFF, bitmap_entries);
+            // Set all bitmap entries to 1 (indicating used)
+            memset(phys_bitmap.data(), 0xFF, bitmap_entries);
 
-            // Adjust the memory map entry to account for the bitmap.
+            // Adjust the length and base of the region
             bootinfo->memmaps[i]->length -= bitmap_size;
             bootinfo->memmaps[i]->base += bitmap_size;
 
-            // Update used memory metadata.
-            phys_glob_meta.used_mem += bitmap_size;
+            // Update used memory count
+            used_mem += bitmap_size;
 
-            // Break out of the loop after finding a suitable location for the bitmap.
             break;
         }
     }
 
-    // Iterate through usable memory map entries to mark bitmap entries as free.
-    for (size_t i = 0; i < bootinfo->memmap_size; i++) {
-        // Skip non-usable memory map entries.
+    // Mark pages as free in the bitmap based on usable memory regions
+    for (size_t i = 0; i < bootinfo->memmap_size; ++i) {
         if (bootinfo->memmaps[i]->type != MEMORY_MAP_USABLE) {
             continue;
         }
 
-        // Iterate through the memory map entry, marking bitmap entries as free.
-        for (uintptr_t t = 0; t < bootinfo->memmaps[i]->type; t += PAGE_SIZE) {
-            __bitmap[(bootinfo->memmaps[i]->base + t) / PAGE_SIZE] = false;
+        for (paddr_t j = 0; j < bootinfo->memmaps[i]->length; j += page_size) {
+            phys_bitmap[(bootinfo->memmaps[i]->base + j) / page_size] = false;
         }
     }
 
-    // Log initialization success and relevant memory information.
+    // Log information about the physical memory bitmap and print metadata
+    log_message(LOG_LEVEL_DEBUG, "Bitmap stored @ %p (%lu entries).",
+                phys_bitmap.data(), bitmap_entries);
+    print_metadata();
     log_message(LOG_LEVEL_INFO,
-                "Successfully Initialized Physical Memory Manager!");
-    log_message(LOG_LEVEL_DEBUG, "Bitmap stored @ %p : %lu KB", __bitmap.data(),
-                bytes_to_kb(__bitmap.length()));
-    log_message(
-        LOG_LEVEL_DEBUG,
-        "Total Memory: %lu MB, Usable Memory: %lu MB, Used Memory: %lu MB",
-        bytes_to_mb(phys_glob_meta.total_mem),
-        bytes_to_mb(phys_glob_meta.usable_mem),
-        bytes_to_mb(phys_glob_meta.used_mem));
+                "Successfully initialized Physical Memory Manager.");
 }
 }  // namespace memory

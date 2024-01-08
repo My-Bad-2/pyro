@@ -9,7 +9,6 @@ sources += files(
     'stdlib/strtoll.c',
     'stdlib/strtoul.c',
     'stdlib/strtoull.c',
-    'stdlib/memalign.c',
     'string/mem.c',
     'string/string.c'
 )

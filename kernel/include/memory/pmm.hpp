@@ -3,69 +3,44 @@
 
 #include <boot/bootinfo.h>
 #include <sys/types.h>
-#include <optional>
-
-/// \def PAGE_SIZE
-/// \brief Size of a page in memory.
-#define PAGE_SIZE 0x1000
+#include <memory/memory.hpp>
+#include <utils/bitmap.hpp>
+#include <utils/mutex.hpp>
 
 namespace memory {
-/// \struct phys_metadata
-/// \brief Structure holding physical memory metadata.
-struct phys_metadata {
-    size_t usable_mem = 0;  ///< Total usable physical memory.
-    size_t total_mem = 0;   ///< Total physical memory.
-    size_t used_mem = 0;    ///< Used physical memory.
-    size_t free_mem = 0;    ///< Free physical memory.
+/// \var constexpr size_t default_page_size
+/// \brief The default page size based on a 4 KiB shift.
+constexpr size_t default_page_size = get_page_size(KiB4);
+
+/// \struct phys_metadata_t
+/// \brief Structure representing physical memory metadata.
+struct phys_metadata_t {
+    size_t free_memory;   ///< The amount of free physical memory in bytes.
+    size_t used_memory;   ///< The amount of used physical memory in bytes.
+    size_t total_memory;  ///< The total physical memory size in bytes.
 };
 
-/// \struct page_frame
-/// \brief Represents a page frame in physical memory.
-struct page_frame {
-    paddr_t base;  ///< Base address of the page frame.
-    size_t count;  ///< Number of contiguous pages in the frame.
+/// \brief Get information about the physical memory.
+/// \return A structure containing metadata about the physical memory.
+phys_metadata_t get_phys_info();
 
-    /// \brief Constructor for page_frame.
-    ///
-    /// \param address Base address of the page frame.
-    /// \param count Number of contiguous pages in the frame.
-    constexpr page_frame(uintptr_t address, size_t count)
-        : base(address), count(count) {}
-};
+/// \brief Request a specific number of pages from the physical memory.
+/// \param count Number of pages to request (default is 1).
+/// \return A pointer to the allocated memory.
+/// \note The memory must be freed using \ref free_page when it is no longer needed.
+void* request_page(size_t count = 1);
 
-/// \brief Allocate a block of physical memory.
-///
-/// \param count Number of bytes to allocate.
-/// \return Pointer to the allocated memory block.
-void* phys_alloc(size_t count);
+/// \brief Free a specific number of pages in the physical memory.
+/// \param address Pointer to the starting address of the memory to free.
+/// \param count Number of pages to free (default is 1).
+/// \note This function should be used to release memory obtained through \ref request_page.
+void free_page(void* address, size_t count = 1);
 
-/// \brief Allocate a block of physical memory at a specific location.
-///
-/// \param limit Upper limit for the allocation.
-/// \param count Number of bytes to allocate.
-/// \return An optional page_frame structure representing the allocated memory.
-std::optional<page_frame> phys_alloc_at(uintptr_t limit, size_t count);
-
-/// \brief Retrieve physical memory information.
-///
-/// \return phys_metadata structure containing memory information.
-phys_metadata phys_info();
-
-/// \brief Free a previously allocated page frame.
-///
-/// \param frame Page frame to be freed.
-void phys_free(page_frame frame);
-
-/// \brief Free a block of physical memory.
-///
-/// \param ptr Pointer to the memory block.
-/// \param count Number of bytes to free.
-void phys_free(void* ptr, size_t count);
-
-/// \brief Initialize physical memory management using boot information.
-///
-/// \param bootinfo Boot information containing memory details.
-void phys_initialize(bootinfo_t* bootinfo);
+/// \brief Initialize physical memory management.
+/// \param bootinfo Pointer to boot information.
+/// \param page_size The size of a page (default is default_page_size).
+void phys_initialize(bootinfo_t* bootinfo,
+                     size_t page_size = default_page_size);
 }  // namespace memory
 
 #endif  // KERNEL_INCLUDE_MEMORY_PMM_HPP_
